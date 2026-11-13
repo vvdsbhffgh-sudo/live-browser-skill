@@ -9,7 +9,7 @@ Give the agent a real browser it can drive — with a live view of everything it
 
 ## What this is
 
-**Atlas** (Alpha 1.0.1) is a free, open-source MCP server (Node.js + Playwright)
+**Atlas** (Alpha 2, 1.0.2-alpha) is a free, open-source MCP server (Node.js + Playwright)
 that gives an AI builder — Claude Code, Cursor, Lovable, Replit Agent — a real
 Chromium browser:
 
