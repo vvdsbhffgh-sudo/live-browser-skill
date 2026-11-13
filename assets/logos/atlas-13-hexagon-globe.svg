@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Atlas logo">
+<defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1E40AF"/><stop offset="100%" stop-color="#38BDF8"/></linearGradient></defs>
+<polygon points="256,100 351,155 351,265 256,320 161,265 161,155" fill="none" stroke="url(#g)" stroke-width="20" stroke-linejoin="round"/><circle cx="256" cy="210" r="55" fill="none" stroke="url(#g)" stroke-width="15"/><ellipse cx="256" cy="210" rx="23" ry="55" fill="none" stroke="url(#g)" stroke-width="11"/><line x1="201" y1="210" x2="311" y2="210" stroke="url(#g)" stroke-width="11" stroke-linecap="round"/>
+<text x="256" y="448" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="46" font-weight="800" letter-spacing="14" fill="#0B2545">ATLAS</text>
+</svg>
