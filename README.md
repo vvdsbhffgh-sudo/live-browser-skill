@@ -2,7 +2,7 @@
 
 ![Atlas logo — globe meridian, Audiowide wordmark](assets/logos/atlas-official-logo.svg)
 
-**Atlas — Alpha 1.0.1** · MIT · free and open source. (Repo name is still
+**Atlas — Alpha 2 (1.0.2-alpha)** · MIT · free and open source. (Repo name is still
 `live-browser-skill` for now — a technical name, kept until publishing.)
 
 A free, open-source **MCP server + Agent Skill** that gives an AI builder
@@ -59,7 +59,12 @@ Config: see `.env.example`. Key variables:
 | `LIVE_BROWSER_BLOCKED_DOMAINS` | _(empty)_ | Comma-separated block list |
 | `ARTEMIS_MCP_URL` | _(empty)_ | URL of your own Artemis MCP server for `phone_status`; unset = no phone |
 
-## Wave 3 (1.0.1-alpha): phone, model router, multi-agent, plugins
+## Wave 3 (1.0.1-alpha) + Alpha 2 (1.0.2-alpha): phone, 50+ model router, verified Live View, Hikma Lab
+
+**Alpha 2 adds:**
+- **50+ model router** — 50 free models (OpenRouter `:free`, Groq free, Gemini free tier, SambaNova free, local Ollama) in chat/code/vision/audio/phone routes, ranked by task strength, not fame. `node scripts/route-model.js --task code` picks the next model, skipping exhausted ones. See `docs/MODEL-ROUTER.md`.
+- **Verified Live View** — the live feature was re-checked end to end on 2026-11-13 (see `docs/LIVE-VERIFIED.md`): pages, status, events, dashboard and the payment guard all work live; what still needs your own machine is real-site navigation (this build VM has no direct egress).
+- **Hikma Lab setup** — `docs/HIKMA-LAB.md`: the user's Hikma Lab app and Zakat al-Hikma AI on Atlas, with the dedicated Google account kept local only (`ATLAS_GOOGLE_ACCOUNT`).
 
 - **Real Android phone (Artemis):** [`docs/ARTEMIS.md`](docs/ARTEMIS.md) —
   Google's `google/artemis` (Apache 2.0) drives a real Android phone or
@@ -116,7 +121,7 @@ Config: see `.env.example`. Key variables:
   `npm run update-deps` — update, run `npm test` as the gate, roll back
   on failure. No blind update to latest.
 - **Name candidates:** [`NAME.md`](NAME.md) — **Atlas, decided**,
-  Alpha 1.0.1. (Earlier candidates: Baseer, Nafitha, Ayn.)
+  Alpha 2 (1.0.2-alpha). (Earlier candidates: Baseer, Nafitha, Ayn.)
 - **Pause / Resume / Record** in the Live View, and `browser_sitemap`.
 
 ## Honest limits — read before you rely on this
@@ -133,7 +138,7 @@ Config: see `.env.example`. Key variables:
 - **No CAPTCHA bypass, no automatic Gmail creation, no merging all
   trending repos into this repo.** These are under **Never** in
   [`FEATURES.md`](FEATURES.md), with the reasons.
-- **Live View has no auth in 1.0.1-alpha.** Run it on `localhost`, or put a
+- **Live View has no auth in 1.0.2-alpha.** Run it on `localhost`, or put a
   deployed instance behind HTTPS + access controls. See `SECURITY.md`.
 - **Local VM check (2026-11-13):** Chromium in the build VM could not reach
   the public internet directly (`ERR_TUNNEL_CONNECTION_FAILED`), so
@@ -259,7 +264,7 @@ Claude Code، Cursor) متصفح حقيقي يقدر يفتحه ويستخدمه
 الاصطناعي **مش بيعمل حساب Gmail لوحده** (جوجل بتطلب تحقق بشري برقم موبايل)،
 **ومش بيتخطّى CAPTCHA** (انت بتحلّها بنفسك لما تظهر، والأداة مفيهاش أي حلّال
 Captcha). كل ده مكتوب في `FEATURES.md` تحت "Never". واسم الأداة بقى **Atlas**،
-إصدار Alpha 1.0.1 — شوف `NAME.md`.
+إصدار Alpha 2 (1.0.2-alpha) — شوف `NAME.md`.
 
 **إيقاف مؤقت وتسجيل:** من صفحة الـ Live View تقدر توقف الذكاء الاصطناعي
 (Pause) وتاخد المتصفح بنفسك، وترجّعه (Resume)، وتشغّل/توقف التسجيل — والتسجيل
