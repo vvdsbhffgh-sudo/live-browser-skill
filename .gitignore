@@ -1,0 +1,10 @@
+node_modules/
+.live-browser-profile/
+.profiles/
+live/
+.env
+# Real (non-example) configs may hold keys / account names — never commit.
+config/model-router.json
+config/agents.json
+plugins/registry.json
+.DS_Store
