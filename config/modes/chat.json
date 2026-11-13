@@ -1,0 +1,1 @@
+{"allowedTools":["browser_start","browser_navigate","browser_snapshot","browser_screenshot","browser_full_screenshot","browser_extract_text","browser_tabs","browser_sitemap","browser_status","browser_stop"],"description":"Light Q&A browsing: look things up and read pages, no clicking into forms or typing.","maxSteps":40,"modelRoute":"chat","name":"chat","readonly":false}
