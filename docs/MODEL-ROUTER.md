@@ -116,3 +116,31 @@ not switch to a paid model on its own.
 - Send your API keys anywhere except the provider you configured.
 - Pick a model for a task it cannot do (e.g. a text-only model for a
   screenshot check).
+
+## Alpha 2 (1.0.2-alpha): 50+ models, five routes, a real helper
+
+The config now lists **50 unique free models** in five routes — `chat`
+(28 entries), `code` (17), `vision` (11), `audio` (4), `phone` (1) —
+across OpenRouter `:free`, Groq free, Gemini free tier, SambaNova free
+tier and local Ollama. Every entry is a real model ID (verified against
+the providers' public lists on 2026-11-13; free rosters change often,
+so re-check a model in the provider's console before relying on it).
+Ranks are by **task strength, not fame**: a lesser-known model can
+outrank a famous one for a specific task, and the router picks it.
+
+New in Alpha 2: the router is executable, not just a config. The MCP
+server loads the config and shows the routes on the Dashboard; the
+helper picks the next model:
+
+```bash
+node scripts/route-model.js --task code
+node scripts/route-model.js --task chat --exhausted "openrouter/thinkingmachines/inkling:free,groq/openai/gpt-oss-120b"
+node scripts/route-model.js --list   # all 50+ models, grouped by task
+```
+
+It prints `provider/model` for the strongest available entry, skipping
+the exhausted ones. When every model for a task is exhausted it exits
+non-zero with `queue-and-pause` — wait `retryDelaySeconds` (default
+60s) and try again. It never silently upgrades to a paid model
+(`neverAutoUpgradeToPaid: true` in the config). Tests:
+`test/route-model.test.js`.
