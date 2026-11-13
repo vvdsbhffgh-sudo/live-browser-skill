@@ -2,7 +2,7 @@
 
 ![Atlas logo — globe meridian, Audiowide wordmark](assets/logos/atlas-official-logo.svg)
 
-**Atlas — Alpha 2 (1.0.2-alpha)** · MIT · free and open source. (Repo name is still
+**Atlas — Alpha 3 (1.0.3-alpha)** · MIT · free and open source. (Repo name is still
 `live-browser-skill` for now — a technical name, kept until publishing.)
 
 A free, open-source **MCP server + Agent Skill** that gives an AI builder
@@ -17,8 +17,10 @@ and **no payment ability ever**.
   viewport emulation, text extraction.
 - **Its own Google login:** you sign in once, manually, with a **dedicated
   Google account**. The session persists in the browser profile.
-- **Live View:** every action + screenshot at `http://localhost:3100/` — you
-  watch everything live.
+- **Live View:** real live video of the browser (`/video.mjpeg`) + every
+  action at `http://localhost:3100/` — you watch everything live, picture
+  only, no audio. A human check pauses the browser and shows a banner; Atlas
+  never solves it.
 - **REST API** next to MCP on the same port (`POST /api/navigate`,
   `POST /api/screenshot`, `GET /api/status`) for in-app AI use.
 - **Session recording:** actions + errors + screenshots saved to
@@ -68,6 +70,13 @@ Config: see `.env.example`. Key variables:
 **Alpha 2 adds:**
 - **50+ model router** — 50 free models (OpenRouter `:free`, Groq free, Gemini free tier, SambaNova free, local Ollama) in chat/code/vision/audio/phone routes, ranked by task strength, not fame. `node scripts/route-model.js --task code` picks the next model, skipping exhausted ones. See `docs/MODEL-ROUTER.md`.
 - **Verified Live View** — the live feature was re-checked end to end on 2026-11-13 (see `docs/LIVE-VERIFIED.md`): pages, status, events, dashboard and the payment guard all work live; what still needs your own machine is real-site navigation (this build VM has no direct egress).
+
+## Alpha 3 (1.0.3-alpha): real live video, public host, human-check handling
+
+**Alpha 3 adds:**
+- **Real live video** — the Live View now streams the browser as a real moving picture (`/video.mjpeg`, MJPEG from the renderer's CDP screencast), with a still-screenshot fallback if the stream is unavailable. Picture only, no audio: a browser screencast has no audio channel. The screencast runs only while someone is watching.
+- **Public host, not localhost** — on a hosted deploy the server reports its real public URL (`RAILWAY_PUBLIC_DOMAIN`, or `ATLAS_PUBLIC_URL`) in `/status`, tool messages, and the Live View, so links work from a phone. Local runs still use `http://localhost:3100/`.
+- **Human-check handling (no bypass)** — when a page shows a human check (Cloudflare "Just a moment...", `__cf_chl_` URL), Atlas pauses, shows a banner in the Live View, and logs it. It never solves, clicks through, or bypasses the check, and it contains no CAPTCHA solver or stealth-bypass library — see `SECURITY.md` ("Human checks").
 - **Hikma Lab setup** — `docs/HIKMA-LAB.md`: the user's Hikma Lab app and Zakat al-Hikma AI on Atlas, with the dedicated Google account kept local only (`ATLAS_GOOGLE_ACCOUNT`).
 
 - **Real Android phone (Artemis):** [`docs/ARTEMIS.md`](docs/ARTEMIS.md) —
@@ -142,7 +151,7 @@ Config: see `.env.example`. Key variables:
 - **No CAPTCHA bypass, no automatic Gmail creation, no merging all
   trending repos into this repo.** These are under **Never** in
   [`FEATURES.md`](FEATURES.md), with the reasons.
-- **Live View has no auth in 1.0.2-alpha.** Run it on `localhost`, or put a
+- **Live View has no auth in 1.0.3-alpha.** Run it on `localhost`, or put a
   deployed instance behind HTTPS + access controls. See `SECURITY.md`.
 - **Local VM check (2026-11-13):** Chromium in the build VM could not reach
   the public internet directly (`ERR_TUNNEL_CONNECTION_FAILED`), so

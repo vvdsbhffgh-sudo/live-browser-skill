@@ -51,6 +51,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 
 const PORT = Number(process.env.LIVE_BROWSER_PORT || 3100);
+// Public base URL for links shown to the user. On Railway the platform sets
+// RAILWAY_PUBLIC_DOMAIN automatically; ATLAS_PUBLIC_URL overrides it for
+// any other host. Never report localhost on a hosted deploy — a phone
+// clicking http://localhost:3100/ reaches itself, not this server.
+const PUBLIC_BASE =
+  process.env.ATLAS_PUBLIC_URL ||
+  (process.env.RAILWAY_PUBLIC_DOMAIN
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+    : null) ||
+  `http://localhost:${PORT}`;
 const PROFILE_DIR = process.env.LIVE_BROWSER_PROFILE
   ? path.resolve(process.env.LIVE_BROWSER_PROFILE)
   : path.join(ROOT, ".live-browser-profile");
@@ -73,6 +83,148 @@ const errorLog = []; // { time, kind, message, url } — console/page/network er
 const sseClients = new Set();
 let latestScreenshot = null; // Buffer | null
 let stepCount = 0; // mutating browser actions in this session
+
+// Live video (CDP screencast -> MJPEG): a real moving picture of the
+// browser, streamed to the Live View. Frames are JPEGs from the renderer;
+// MJPEG carries picture only — there is no audio channel in a browser
+// screencast, and Atlas never adds one.
+const videoClients = new Set(); // HTTP responses streaming multipart frames
+let cdpSession = null;
+let cdpPage = null;
+let lastFrame = null; // Buffer | null — most recent screencast frame
+
+// Human-check state: when a page shows a "are you human?" challenge
+// (Cloudflare "Just a moment..." etc.), Atlas pauses and surfaces it —
+// it never solves, clicks through, or bypasses the check.
+let challengeActive = false;
+
+function broadcastFrame(buf) {
+  lastFrame = buf;
+  latestScreenshot = buf;
+  const head = Buffer.from(
+    `--atlasframe\r\nContent-Type: image/jpeg\r\nContent-Length: ${buf.length}\r\n\r\n`,
+  );
+  for (const res of videoClients) {
+    try {
+      res.write(head);
+      res.write(buf);
+      res.write("\r\n");
+    } catch {
+      // Client gone; cleaned up on 'close'.
+    }
+  }
+}
+
+async function startScreencast() {
+  if (!page || cdpSession) return;
+  try {
+    cdpSession = await page.context().newCDPSession(page);
+    cdpPage = page;
+    cdpSession.on("Page.screencastFrame", async (params) => {
+      try {
+        broadcastFrame(Buffer.from(params.data, "base64"));
+      } finally {
+        await cdpSession
+          ?.send("Page.screencastFrameAck", { sessionId: params.sessionId })
+          .catch(() => {
+            // Session died mid-stream; clear it so the next watch restarts it.
+            cdpSession = null;
+            cdpPage = null;
+          });
+      }
+    });
+    await cdpSession.send("Page.startScreencast", {
+      format: "jpeg",
+      quality: 55,
+      maxWidth: 1280,
+      maxHeight: 800,
+      everyNthFrame: 2,
+    });
+  } catch {
+    cdpSession = null;
+    cdpPage = null;
+  }
+}
+
+async function stopScreencast() {
+  if (!cdpSession) return;
+  const s = cdpSession;
+  cdpSession = null;
+  cdpPage = null;
+  await s.send("Page.stopScreencast").catch(() => {});
+  await s.detach().catch(() => {});
+}
+
+/** Run the screencast only while someone is watching the Live View. */
+async function ensureScreencast() {
+  if (!page) return;
+  if (cdpPage !== page) await stopScreencast();
+  if (videoClients.size > 0 && !cdpSession) await startScreencast();
+  if (videoClients.size === 0 && cdpSession) await stopScreencast();
+}
+
+/** Page title with a timeout — a stuck page must never hang a request. */
+async function titleWithTimeout(pg, ms = 3000) {
+  try {
+    return await Promise.race([
+      pg.title(),
+      new Promise((resolve) => setTimeout(() => resolve(""), ms)),
+    ]);
+  } catch {
+    return "";
+  }
+}
+
+const CHALLENGE_PATTERNS = [
+  /just a moment/i,
+  /attention required/i,
+  /verify you are human/i,
+  /are you a robot/i,
+  /checking your browser/i,
+  /please verify/i,
+];
+
+async function detectChallenge() {
+  if (!page) return null;
+  try {
+    const url = page.url();
+    const title = await titleWithTimeout(page);
+    if (url.includes("__cf_chl_") || url.includes("/cdn-cgi/challenge")) {
+      return { kind: "cloudflare", detail: title || "Cloudflare human check" };
+    }
+    if (CHALLENGE_PATTERNS.some((re) => re.test(title))) {
+      return { kind: "human-check", detail: title };
+    }
+  } catch {}
+  return null;
+}
+
+/** On a human check: surface it in the Live View and pause the agent.
+ * Atlas never solves, clicks through, or bypasses a human check — a human
+ * solves it once in a visible browser, or the agent goes elsewhere. */
+async function checkChallenge(source) {
+  const hit = await detectChallenge();
+  if (hit && !challengeActive) {
+    challengeActive = true;
+    paused = true;
+    broadcast({
+      type: "challenge",
+      url: await currentUrl(),
+      reason: hit.detail,
+      time: new Date().toISOString(),
+    });
+    broadcast({ type: "paused", time: new Date().toISOString() });
+    logAction(
+      "challenge_detected",
+      { source },
+      `Human check on ${await currentUrl()}: ${hit.detail}. Browser paused — Atlas never solves a human check; a human solves it in a visible browser.`,
+    );
+  } else if (!hit && challengeActive) {
+    challengeActive = false;
+    broadcast({ type: "challenge_cleared", time: new Date().toISOString() });
+  }
+  return hit;
+}
 
 // Wave 3 state: pause stops mutating browser actions (read-only tools keep
 // working); recording gates the session file + per-action screenshots.
@@ -239,7 +391,7 @@ function pausedGuard() {
 function statusSnapshot() {
   return {
     name: "atlas",
-    version: "1.0.2-alpha",
+    version: "1.0.3-alpha",
     startedAt,
     port: PORT,
     headed: HEADED,
@@ -255,8 +407,12 @@ function statusSnapshot() {
     errors: errorLog.slice(-20),
     recentActions: actionLog.slice(-20),
     sessionFile: SESSION_FILE,
-    liveView: `http://localhost:${PORT}/`,
-    mcpEndpoint: `http://localhost:${PORT}/mcp`,
+    liveView: `${PUBLIC_BASE}/`,
+    liveVideo: `${PUBLIC_BASE}/video.mjpeg`,
+    videoLive: Boolean(cdpSession),
+    videoViewers: videoClients.size,
+    challenge: challengeActive,
+    mcpEndpoint: `${PUBLIC_BASE}/mcp`,
     paused,
     recording,
     allowSensitive: effectiveAllowSensitive(),
@@ -326,10 +482,18 @@ function attachPageListeners(pg) {
   pg.on("response", (res) => {
     if (res.status() >= 400) logError("http", `HTTP ${res.status()}`, res.url());
   });
+  pg.on("frameravigated", () => {
+    refreshScreenshot().catch(() => {});
+    // A human check can appear on any navigation — surface it, never solve it.
+    if (pg === page) checkChallenge("navigation").catch(() => {});
+  });
 }
 
 async function ensureBrowser() {
-  if (context && page) return { context, page };
+  if (context && page) {
+    await ensureScreencast();
+    return { context, page };
+  }
   await mkdir(PROFILE_DIR, { recursive: true });
   context = await chromium.launchPersistentContext(PROFILE_DIR, {
     headless: !HEADED,
@@ -339,9 +503,7 @@ async function ensureBrowser() {
   page = context.pages()[0] ?? (await context.newPage());
   for (const p of context.pages()) attachPageListeners(p);
   context.on("page", (p) => attachPageListeners(p));
-  page.on("frameravigated", () => {
-    refreshScreenshot().catch(() => {});
-  });
+  await ensureScreencast();
   return { context, page };
 }
 
@@ -440,7 +602,7 @@ async function elementText(locator) {
 function createMcpServer() {
   const server = new McpServer({
     name: "atlas",
-    version: "1.0.2-alpha",
+    version: "1.0.3-alpha",
   });
 
   server.registerTool(
@@ -449,7 +611,7 @@ function createMcpServer() {
     async () => {
       await ensureBrowser();
       const url = await currentUrl();
-      const msg = `Browser ready. Current URL: ${url || "(blank)"}. Live View: http://localhost:${PORT}/`;
+      const msg = `Browser ready. Current URL: ${url || "(blank)"}. Live View: ${PUBLIC_BASE}/`;
       logAction("browser_start", {}, msg);
       await refreshScreenshot();
       return { content: [{ type: "text", text: msg }] };
@@ -488,7 +650,12 @@ function createMcpServer() {
       countStep();
       const { page: pg } = await ensureBrowser();
       await pg.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
-      const msg = `Navigated to ${pg.url()} — ${await pg.title().catch(() => "")}`;
+      const challenge = await checkChallenge("browser_navigate");
+      const msg =
+        `Navigated to ${pg.url()} — ${await titleWithTimeout(pg)}` +
+        (challenge
+          ? `\nNote: this page shows a human check (${challenge.detail}). Atlas paused here and will not solve it — solve it once in a visible browser, or navigate elsewhere.`
+          : "");
       logAction("browser_navigate", { url }, msg);
       await refreshScreenshot();
       return { content: [{ type: "text", text: msg }] };
@@ -657,7 +824,7 @@ function createMcpServer() {
       return {
         content: [
           { type: "image", data: buf.toString("base64"), mimeType: "image/png" },
-          { type: "text", text: `Screenshot taken (${buf.length} bytes). Live View: http://localhost:${PORT}/` },
+          { type: "text", text: `Screenshot taken (${buf.length} bytes). Live View: ${PUBLIC_BASE}/` },
         ],
       };
     },
@@ -694,7 +861,8 @@ function createMcpServer() {
         errors: errorLog.slice(-20),
         errorCount: errorLog.length,
         sessionFile: SESSION_FILE,
-        liveView: `http://localhost:${PORT}/`,
+        liveView: `${PUBLIC_BASE}/`,
+        liveVideo: `${PUBLIC_BASE}/video.mjpeg`,
         recentActions: actionLog.slice(-10),
       };
       logAction("browser_status", {}, `status: ${url || "(browser not started)"}`);
@@ -727,7 +895,7 @@ function createMcpServer() {
         "  3. Complete any 2-step check yourself. The session is saved in the browser profile and persists across restarts.",
         "",
         headedNote,
-        `Live View (watch the sign-in happen): http://localhost:${PORT}/`,
+        `Live View (watch the sign-in happen): ${PUBLIC_BASE}/`,
         detected?.email
           ? `A Google account already looks signed in: ${detected.email}`
           : "No signed-in Google account detected yet — sign in manually, then call browser_status to confirm.",
@@ -741,6 +909,7 @@ function createMcpServer() {
     "browser_stop",
     { title: "Stop browser", description: "Close the browser. The profile (including the Google session) is kept and reused next time.", inputSchema: {} },
     async () => {
+      await stopScreencast();
       if (context) {
         await context.close().catch(() => {});
         context = null;
@@ -1226,7 +1395,7 @@ async function handleHttp(req, res) {
 
   if (url.pathname === "/api/status") {
     const snap = statusSnapshot();
-    snap.title = page ? await page.title().catch(() => "") : null;
+    snap.title = page ? await titleWithTimeout(page) : null;
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(snap));
     return;
@@ -1356,9 +1525,38 @@ async function handleHttp(req, res) {
 
   if (url.pathname === "/status") {
     const snap = statusSnapshot();
-    snap.title = page ? await page.title().catch(() => "") : null;
+    snap.title = page ? await titleWithTimeout(page) : null;
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(snap));
+    return;
+  }
+
+  if (url.pathname === "/video.mjpeg") {
+    // Real live video of the browser: MJPEG stream of CDP screencast frames.
+    // Picture only — a browser screencast has no audio channel. The stream
+    // starts the screencast on first viewer and stops it on last disconnect,
+    // so an idle server costs nothing. Until the browser starts, the stream
+    // stays open and the first frame arrives when it does.
+    res.writeHead(200, {
+      "Content-Type": "multipart/x-mixed-replace; boundary=atlasframe",
+      "Cache-Control": "no-cache, no-store",
+      Connection: "keep-alive",
+    });
+    videoClients.add(res);
+    if (lastFrame) {
+      try {
+        res.write(
+          `--atlasframe\r\nContent-Type: image/jpeg\r\nContent-Length: ${lastFrame.length}\r\n\r\n`,
+        );
+        res.write(lastFrame);
+        res.write("\r\n");
+      } catch {}
+    }
+    await ensureScreencast();
+    req.on("close", () => {
+      videoClients.delete(res);
+      ensureScreencast().catch(() => {});
+    });
     return;
   }
 
@@ -1459,9 +1657,10 @@ if (useHttp) {
     });
   });
   httpServer.listen(PORT, () => {
-    console.log(`Atlas Live View: http://localhost:${PORT}/`);
-    console.log(`Atlas MCP endpoint: http://localhost:${PORT}/mcp`);
-    console.log(`Live View status: http://localhost:${PORT}/status`);
+    console.log(`Atlas Live View: ${PUBLIC_BASE}/`);
+    console.log(`Atlas live video: ${PUBLIC_BASE}/video.mjpeg`);
+    console.log(`Atlas MCP endpoint: ${PUBLIC_BASE}/mcp`);
+    console.log(`Live View status: ${PUBLIC_BASE}/status`);
   });
 } else {
   const server = createMcpServer();

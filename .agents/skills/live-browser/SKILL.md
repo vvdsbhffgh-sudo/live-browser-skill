@@ -9,7 +9,7 @@ Give the agent a real browser it can drive — with a live view of everything it
 
 ## What this is
 
-**Atlas** (Alpha 2, 1.0.2-alpha) is a free, open-source MCP server (Node.js + Playwright)
+**Atlas** (Alpha 3, 1.0.3-alpha) is a free, open-source MCP server (Node.js + Playwright)
 that gives an AI builder — Claude Code, Cursor, Lovable, Replit Agent — a real
 Chromium browser:
 
@@ -20,10 +20,14 @@ Chromium browser:
 - **Its own Google login:** the browser keeps a persistent profile. The user
   signs in once, manually, with a **dedicated Google account** (never their
   main personal account). The session persists across restarts.
-- **Live view:** every action is logged and screenshotted at
+- **Live view:** real live video of the browser (`/video.mjpeg`, MJPEG from
+  the renderer's CDP screencast) plus every action logged at
   `http://localhost:3100/` — the user watches everything live, including
   **console & network errors**. **Pause / Resume / Record** buttons let the
-  user take over the browser and start/stop recording.
+  user take over the browser and start/stop recording. Video is picture only
+  (a browser screencast has no audio channel). If a site shows a human check
+  (Cloudflare "Just a moment..."), Atlas pauses and shows a banner — it never
+  solves, clicks through, or bypasses the check.
 - **Modes:** `browser_mode` switches between coding, content, research,
   testing, chat, and language modes (coding-python, coding-web, coding-api,
   coding-scripts, content-writing). Each mode sets its model route, its

@@ -36,7 +36,13 @@
   </span>
 </header>
 <main>
-  <div><img id="shot" alt="Latest browser screenshot — updates automatically"></div>
+  <div id="challenge" hidden style="background:#3a1d1d;border:1px solid #7a2e2e;border-radius:8px;padding:12px 16px;">
+    <strong>⚠️ هذا الموقع يطلب تحققًا بشريًا (مثل "Just a moment...").</strong><br>
+    الذكاء الاصطناعي توقّف هنا، وأطلس لا يحلّ اختبار "أنت إنسان؟" أبدًا — لا بالنقر عليه ولا بأي أداة التفاف.
+    الحل: افتح الموقع من متصفحك العادي وحلّ التحقق مرة واحدة بنفسك، أو اطلب من الذكاء الاصطناعي يروح لموقع تاني.
+    <br><strong>⚠️ This site asks for a human check.</strong> The AI paused here and will never solve it. Solve it once in your own visible browser, or ask the AI to go elsewhere.
+  </div>
+  <div><img id="shot" src="/video.mjpeg" alt="Live browser video — real-time stream"><p class="muted" id="video-state">📹 فيديو مباشر: جارٍ الاتصال…</p></div>
   <section>
     <h2>Live action log</h2>
     <p class="muted" id="steps">(steps: 0)</p>
@@ -48,17 +54,21 @@
   </section>
   <section>
     <h2>How this works</h2>
+    <p><strong>Live video:</strong> the picture above is a real live stream of the browser (MJPEG from the renderer's screencast) — it moves as the AI works. Picture only, no audio: a browser screencast has no audio channel. If the stream is unavailable, the page falls back to a still screenshot that refreshes after each step.</p>
     <p>The AI drives a real Chromium browser through the Atlas MCP server. Every action it takes appears above, and the screenshot refreshes after each step.</p>
     <p><strong>Google sign-in is manual, once, by you</strong> — with a dedicated Google account, never your main personal account. Never paste a password in chat or give it to the AI.</p>
     <p><strong>This skill never pays.</strong> Checkout and payment pages are blocked, and card numbers are never typed.</p>
     <p><strong>Pause</strong> stops the agent so you can take over the browser yourself; <strong>Resume</strong> lets it continue. <strong>Record</strong> starts/stops saving the session (action log + screenshots) to <code>live/</code> on this machine only — recording starts and stops only when you click it.</p>
-    <p class="muted">Endpoints: <a href="/status">/status</a> · <a href="/latest.png">/latest.png</a> · <a href="/events">/events</a> (SSE) · MCP: <code>/mcp</code></p>
+    <p><strong>Human checks:</strong> if a site asks "are you human?" (e.g. Cloudflare "Just a moment..."), Atlas pauses and shows a warning here. It never solves, clicks through, or bypasses a human check — solve it once in your own visible browser, or go elsewhere.</p>
+    <p class="muted">Endpoints: <a href="/status">/status</a> · <a href="/video.mjpeg">/video.mjpeg</a> · <a href="/latest.png">/latest.png</a> · <a href="/events">/events</a> (SSE) · MCP: <code>/mcp</code></p>
   </section>
   <section dir="rtl" lang="ar">
     <h2>باختصار بالعربي</h2>
+    <p><strong>فيديو مباشر حقيقي:</strong> الصورة اللي فوق دي بث حي من المتصفح نفسه — بتتحرك مع شغل الذكاء الاصطناعي لحظة بلحظة. صورة بس، من غير صوت: بث شاشة المتصفح مفيهوش قناة صوت أصلًا.</p>
     <p>دي صفحة بث مباشر للي الذكاء الاصطناعي بيعمله في المتصفح: كل خطوة بتظهر فوق، والصورة بتتحدّث بعد كل خطوة.</p>
     <p>تسجيل الدخول بجوجل بيتم <strong>يدويًا مرة واحدة منك أنت</strong>، وبحساب جوجل مخصّص للذكاء الاصطناعي — مش حسابك الشخصي — وممنوع تبعت كلمة السر في الشات أو للذكاء الاصطناعي.</p>
     <p><strong>الأداة دي مش بتدفع أبدًا:</strong> صفحات الدفع محظورة، وأرقام البطاقات مش بتتكتب.</p>
+    <p><strong>التحقق البشري:</strong> لو موقع طلب "أثبت إنك إنسان" (زي "Just a moment...")، أطلس بيقف وبيوريك تنبيه هنا — ومش بيحلّ التحقق ولا بيتخطاه أبدًا. الحل إنك تحليه مرة واحدة من متصفحك بنفسك.</p>
   </section>
 </main>
 <script>
@@ -79,13 +89,30 @@
       `${e.time}  [${e.kind}]  ${e.message}  ${e.url || ''}`
     ).join('\n') || '(no errors recorded)';
   }
+  // Live video is primary (the <img> streams /video.mjpeg). If the stream
+  // fails, fall back to the still screenshot (/latest.png) polling.
+  let videoFailed = false;
   function refreshShot() { shot.src = '/latest.png?t=' + Date.now(); }
+  shot.onerror = () => {
+    if (!videoFailed) {
+      videoFailed = true;
+      document.getElementById('video-state').textContent = '📹 الفيديو المباشر غير متاح — عرض صورة ثابتة تتحدث بعد كل خطوة';
+      refreshShot();
+    }
+  };
   async function refreshStatus() {
     try {
       const r = await fetch('/status');
       const s = await r.json();
       urlEl.textContent = s.url ? `${s.title ? s.title + ' — ' : ''}${s.url}` : '(browser not started yet)';
       stepsEl.textContent = `(steps: ${s.steps}/${s.maxSteps}${s.mode ? ` · mode: ${s.mode}` : ''}${s.readonly ? ' · READ-ONLY' : ''}${s.paused ? ' · PAUSED' : ''}${s.tabs ? ` · ${s.tabs} tab(s)` : ''})`;
+      if (!videoFailed) {
+        const vs = document.getElementById('video-state');
+        if (s.videoLive) vs.textContent = `📹 فيديو مباشر: شغال${s.videoViewers ? ` (${s.videoViewers} مشاهد)` : ''}`;
+        else if (s.browserRunning) vs.textContent = '📹 فيديو مباشر: بيشتغل…';
+        else vs.textContent = '📹 فيديو مباشر: المتصفح مش شغال لسه — ابدأ من الـ AI';
+      }
+      if (s.challenge) document.getElementById('challenge').hidden = false;
       setCtl(s);
       if (Array.isArray(s.errors)) { errors.length = 0; errors.push(...s.errors); renderErrors(); }
     } catch {}
@@ -120,12 +147,14 @@
       if (d.type === 'hello' && Array.isArray(d.errors)) { errors.push(...d.errors); renderErrors(); }
       if (d.type === 'action') { entries.push(d); renderLog(); refreshStatus(); }
       if (d.type === 'error') { errors.push(d); renderErrors(); }
-      if (d.type === 'screenshot') refreshShot();
+      if (d.type === 'screenshot' && videoFailed) refreshShot();
+      if (d.type === 'challenge') document.getElementById('challenge').hidden = false;
+      if (d.type === 'challenge_cleared' || d.type === 'resumed') document.getElementById('challenge').hidden = true;
       if (d.type === 'paused' || d.type === 'resumed' || d.type === 'recording' || d.type === 'mode') refreshStatus();
     } catch {}
   };
-  refreshShot(); refreshStatus();
-  setInterval(refreshShot, 5000);
+  refreshStatus();
+  setInterval(() => { if (videoFailed) refreshShot(); }, 5000);
   setInterval(refreshStatus, 5000);
 </script>
 </body>

@@ -13,11 +13,11 @@ import { artemisStatus } from "../server/artemis.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("version is 1.0.2-alpha", () => {
+test("version is 1.0.3-alpha", () => {
   const pkg = JSON.parse(readFileSync(path.join(ROOT, "package.json"), "utf8"));
-  assert.equal(pkg.version, "1.0.2-alpha");
+  assert.equal(pkg.version, "1.0.3-alpha");
   const src = readFileSync(path.join(ROOT, "server/index.js"), "utf8");
-  assert.match(src, /1\.0\.2-alpha/);
+  assert.match(src, /1\.0\.3-alpha/);
 });
 
 test("HTTPS-only: plain http refused except localhost", () => {

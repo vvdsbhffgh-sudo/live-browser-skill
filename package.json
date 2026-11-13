@@ -35,7 +35,7 @@
     "test": "node --test \"test/*.test.js\""
   },
   "type": "module",
-  "version": "1.0.2-alpha",
+  "version": "1.0.3-alpha",
   "bin": {
     "atlas": "server/cli.js"
   }

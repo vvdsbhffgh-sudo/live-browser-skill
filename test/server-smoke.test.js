@@ -9,7 +9,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 test("package.json has the required scripts and deps", () => {
   const pkg = JSON.parse(readFileSync(path.join(ROOT, "package.json"), "utf8"));
   assert.equal(pkg.name, "atlas");
-  assert.equal(pkg.version, "1.0.2-alpha");
+  assert.equal(pkg.version, "1.0.3-alpha");
   assert.equal(pkg.scripts["list-tools"], "node scripts/list-tools.js");
   assert.equal(pkg.scripts["update-deps"], "bash scripts/update-deps.sh");
   assert.equal(pkg.scripts.start, "node server/index.js");
