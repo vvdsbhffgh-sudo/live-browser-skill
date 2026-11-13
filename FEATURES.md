@@ -1,6 +1,6 @@
 # FEATURES.md — Now / Next / Never
 
-Version **1.0.1-alpha**. ✅ = shipped and tested. 📋 = planned, not built.
+Version **1.0.2-alpha (Alpha 2)**. ✅ = shipped and tested. 📋 = planned, not built.
 Anything under **Never** will not be built, however often it is asked for —
 the reason is written next to it.
 
@@ -75,9 +75,15 @@ the reason is written next to it.
 - **Name candidates** — `NAME.md`: بصير Baseer, نافذة Nafitha, عين Ayn,
   أطلس Atlas (pick pending).
 
+## ✅ Now — shipped in Alpha 2 (1.0.2-alpha)
+
+- **50+ model router, ranked by strength — not fame.** `config/model-router.example.json` now lists 50 unique free models across OpenRouter `:free`, Groq free, Gemini free tier, SambaNova free tier and local Ollama, in five routes (chat, code, vision, audio, phone). Rank 1 = strongest for that task, judged on public benchmarks — a lesser-known model can outrank a famous one. `scripts/route-model.js` is the executable router: `node scripts/route-model.js --task code` prints the next model, skipping exhausted ones; when all are exhausted it says queue-and-pause, never silently upgrades to paid. Calling the pool "without limits" was a figure of speech: every provider still has a hard cap (see `docs/FREE-MODELS.md`).
+- **Live View verified, not just claimed.** `docs/LIVE-VERIFIED.md` records the 2026-11-13 live check: tests 55/55 green (now 61 with the router tests), Live View `/` 200, `/status` 200, `/live` 200, `/dashboard` 200, MCP initialize returns `atlas` / `1.0.2-alpha`, checkout navigation refused with "Payment blocked: this skill never pays", SSE `/events` streams live actions. Honest limit kept: real-site navigation and live screenshots still need a machine with direct internet egress — this build VM's Chromium cannot reach the public internet.
+- **Hikma Lab setup.** `docs/HIKMA-LAB.md` documents the user's Hikma Lab app (hikmalab11.lovable.app) and its Zakat al-Hikma AI using Atlas: dedicated Google account via `ATLAS_GOOGLE_ACCOUNT` in your own `.env` (never committed, never in the public repo), browser + Android phone (Artemis) + Windows (UFO) all from one setup.
+
 ## ✅ Now — shipped in the final wave (1.0.1-alpha, Atlas)
 
-- **Name decided: Atlas.** Version Alpha 1.0.1. The repo keeps the
+- **Name decided: Atlas.** Version Alpha 2 (1.0.2-alpha). The repo keeps the
   technical name `live-browser-skill` until publishing; the product,
   the package, the MCP server, and all titles are Atlas (see `NAME.md`).
 - **Modes library** — `config/modes/` (coding, content, research,
