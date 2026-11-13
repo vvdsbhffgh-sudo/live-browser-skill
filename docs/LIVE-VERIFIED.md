@@ -31,7 +31,7 @@ behind HTTPS + access controls (see `SECURITY.md`).
 
 | Check | Result |
 |---|---|
-| `npm test` | **62/62 pass, 0 fail** (55 before Alpha 2, +7 router tests in `test/route-model.test.js`) |
+| `npm test` | **68/68 pass, 0 fail** (55 before Alpha 2, +7 router tests, +6 CLI tests) |
 | `GET /` (Live View page) | **200**, 7,552 bytes |
 | `GET /live` | **200** |
 | `GET /status` | **200** |
