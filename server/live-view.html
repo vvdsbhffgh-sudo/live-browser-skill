@@ -1,156 +1,308 @@
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Atlas — Live View</title>
+<title>Atlas — Live View | العرض المباشر</title>
 <style>
-  body { font-family: system-ui, sans-serif; margin: 0; background: #0f1115; color: #e8e8e8; }
-  header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #171a21; border-bottom: 1px solid #2a2f3a; flex-wrap: wrap; }
-  .badge { background: #e5484d; color: #fff; font-weight: 800; padding: 4px 10px; border-radius: 999px; letter-spacing: 1px; }
+  :root { --bg:#0f1115; --card:#171a21; --line:#2a2f3a; --text:#e8e8e8; --muted:#9aa3b2; --blue:#9ecbff; --red:#e5484d; --green:#3fb950; --amber:#d29922; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 16px; }
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 16px; background: var(--card); border-bottom: 1px solid var(--line); }
+  header .wrap { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; width: 100%; padding: 0; }
+  .badge { background: var(--red); color: #fff; font-weight: 800; padding: 4px 12px; border-radius: 999px; letter-spacing: 1px; font-size: 13px; }
   .badge::before { content: "● "; }
-  h1 { font-size: 18px; margin: 0; }
-  #url { color: #9ecbff; word-break: break-all; }
-  main { padding: 16px; display: grid; gap: 16px; }
-  img#shot { width: 100%; max-width: 1280px; border: 1px solid #2a2f3a; border-radius: 8px; background: #000; }
-  section { background: #171a21; border: 1px solid #2a2f3a; border-radius: 8px; padding: 12px 16px; }
-  pre { white-space: pre-wrap; word-break: break-word; font-size: 13px; max-height: 320px; overflow: auto; }
-  button { font: inherit; font-weight: 700; padding: 6px 14px; border-radius: 999px; border: 1px solid #3a4152; background: #22262f; color: #e8e8e8; cursor: pointer; }
+  h1 { font-size: 20px; margin: 0; }
+  .spacer { flex: 1; }
+  .conn { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); display: inline-block; }
+  .dot.off { background: var(--red); }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+  main { display: grid; gap: 16px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .card .label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .card .value { font-size: 16px; font-weight: 700; word-break: break-word; }
+  .card .sub { font-size: 12px; color: var(--muted); margin-top: 2px; word-break: break-all; }
+  .progress { height: 8px; background: #22262f; border-radius: 999px; overflow: hidden; margin-top: 8px; }
+  .progress > div { height: 100%; background: var(--blue); }
+  #challenge { background: #3a1d1d; border: 1px solid #7a2e2e; border-radius: 12px; padding: 14px 16px; line-height: 1.7; }
+  .video-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .video-box { position: relative; background: #000; border-radius: 8px; overflow: hidden; }
+  img#shot { width: 100%; max-width: 1280px; display: block; }
+  #empty-state { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #000; text-align: center; padding: 24px; }
+  #empty-state .big { font-size: 18px; font-weight: 700; }
+  #last-action { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; padding: 10px 4px 0; font-size: 15px; }
+  #last-action .tag { background: #22262f; border: 1px solid #3a4152; border-radius: 999px; padding: 2px 10px; font-size: 12px; color: var(--muted); }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding-top: 12px; }
+  button { font: inherit; font-weight: 700; padding: 8px 16px; border-radius: 999px; border: 1px solid #3a4152; background: #22262f; color: var(--text); cursor: pointer; }
   button:hover { background: #2c313d; }
-  button[aria-pressed="true"] { background: #e5484d; border-color: #e5484d; color: #fff; }
-  #controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  #ctl-state { font-size: 13px; }
-  a { color: #9ecbff; }
+  button[aria-pressed="true"] { background: var(--red); border-color: var(--red); color: #fff; }
+  button:disabled { opacity: .5; cursor: default; }
+  .nav-box { display: flex; gap: 8px; flex: 1; min-width: 260px; }
+  .nav-box input { flex: 1; font: inherit; padding: 8px 12px; border-radius: 999px; border: 1px solid #3a4152; background: #0f1115; color: var(--text); min-width: 0; }
+  .nav-box input::placeholder { color: var(--muted); }
+  #nav-result { font-size: 13px; color: var(--muted); padding-top: 8px; min-height: 18px; }
+  .grid2 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
+  @media (max-width: 820px) { .grid2 { grid-template-columns: 1fr; } }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  section h2 { font-size: 16px; margin: 0 0 10px; }
+  ul.log { list-style: none; margin: 0; padding: 0; max-height: 420px; overflow: auto; }
+  ul.log li { padding: 8px 0; border-bottom: 1px solid #22262f; font-size: 14px; line-height: 1.6; }
+  ul.log li:last-child { border-bottom: none; }
+  ul.log .t { color: var(--muted); font-size: 12px; margin-inline-end: 8px; }
+  ul.log .r { color: var(--muted); font-size: 13px; display: block; }
+  ul.errors { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow: auto; }
+  ul.errors li { padding: 6px 0; border-bottom: 1px solid #22262f; font-size: 13px; line-height: 1.6; word-break: break-word; }
+  .ok-line { color: var(--green); }
+  footer { color: var(--muted); font-size: 12px; text-align: center; padding: 8px 0 24px; }
+  footer a { color: var(--blue); }
+  .howto { line-height: 1.9; font-size: 14px; }
+  .howto b { color: var(--text); }
 </style>
 </head>
 <body>
 <header>
-  <span class="badge">LIVE</span>
-  <h1>Atlas — what the AI is doing, as it happens</h1>
-  <span id="url" class="muted">(browser not started yet)</span>
-  <span id="controls">
-    <button id="btn-pause" type="button" title="Stop the agent from acting so you can take over">⏸ Pause</button>
-    <button id="btn-resume" type="button" title="Let the agent act again">▶ Resume</button>
-    <button id="btn-record" type="button" aria-pressed="true" title="Recording saves the action log + screenshots to live/ on this machine only. Click to stop.">● Record</button>
-    <span id="ctl-state" class="muted">recording: on</span>
-  </span>
+  <div class="wrap">
+    <span class="badge">LIVE • مباشر</span>
+    <h1>Atlas — العرض المباشر للمتصفح</h1>
+    <span class="spacer"></span>
+    <span class="conn"><span class="dot" id="conn-dot"></span><span id="conn-text">متصل</span></span>
+    <span class="conn small" id="clock"></span>
+  </div>
 </header>
+<div class="wrap">
 <main>
-  <div id="challenge" hidden style="background:#3a1d1d;border:1px solid #7a2e2e;border-radius:8px;padding:12px 16px;">
+  <!-- 1) الحالة في لمحة -->
+  <div class="cards">
+    <div class="card">
+      <div class="label">المتصفح</div>
+      <div class="value" id="c-browser">…</div>
+      <div class="sub" id="c-browser-sub"></div>
+    </div>
+    <div class="card">
+      <div class="label">الصفحة الحالية</div>
+      <div class="value" id="c-title">…</div>
+      <div class="sub" id="c-url"></div>
+    </div>
+    <div class="card">
+      <div class="label">الخطوات</div>
+      <div class="value" id="c-steps">…</div>
+      <div class="progress"><div id="c-steps-bar" style="width:0%"></div></div>
+    </div>
+    <div class="card">
+      <div class="label">الوضع • الفيديو</div>
+      <div class="value" id="c-mode">…</div>
+      <div class="sub" id="c-video">…</div>
+    </div>
+  </div>
+
+  <!-- 2) تنبيه التحقق البشري -->
+  <div id="challenge" hidden>
     <strong>⚠️ هذا الموقع يطلب تحققًا بشريًا (مثل "Just a moment...").</strong><br>
     الذكاء الاصطناعي توقّف هنا، وأطلس لا يحلّ اختبار "أنت إنسان؟" أبدًا — لا بالنقر عليه ولا بأي أداة التفاف.
     الحل: افتح الموقع من متصفحك العادي وحلّ التحقق مرة واحدة بنفسك، أو اطلب من الذكاء الاصطناعي يروح لموقع تاني.
     <br><strong>⚠️ This site asks for a human check.</strong> The AI paused here and will never solve it. Solve it once in your own visible browser, or ask the AI to go elsewhere.
   </div>
-  <div><img id="shot" src="/video.mjpeg" alt="Live browser video — real-time stream"><p class="muted" id="video-state">📹 فيديو مباشر: جارٍ الاتصال…</p></div>
-  <section>
-    <h2>Live action log</h2>
-    <p class="muted" id="steps">(steps: 0)</p>
-    <pre id="log">(waiting for actions…)</pre>
-  </section>
-  <section>
-    <h2>Console &amp; network errors</h2>
-    <pre id="errors">(no errors recorded)</pre>
-  </section>
-  <section>
-    <h2>How this works</h2>
-    <p><strong>Live video:</strong> the picture above is a real live stream of the browser (MJPEG from the renderer's screencast) — it moves as the AI works. Picture only, no audio: a browser screencast has no audio channel. If the stream is unavailable, the page falls back to a still screenshot that refreshes after each step.</p>
-    <p>The AI drives a real Chromium browser through the Atlas MCP server. Every action it takes appears above, and the screenshot refreshes after each step.</p>
-    <p><strong>Google sign-in is manual, once, by you</strong> — with a dedicated Google account, never your main personal account. Never paste a password in chat or give it to the AI.</p>
-    <p><strong>This skill never pays.</strong> Checkout and payment pages are blocked, and card numbers are never typed.</p>
-    <p><strong>Pause</strong> stops the agent so you can take over the browser yourself; <strong>Resume</strong> lets it continue. <strong>Record</strong> starts/stops saving the session (action log + screenshots) to <code>live/</code> on this machine only — recording starts and stops only when you click it.</p>
-    <p><strong>Human checks:</strong> if a site asks "are you human?" (e.g. Cloudflare "Just a moment..."), Atlas pauses and shows a warning here. It never solves, clicks through, or bypasses a human check — solve it once in your own visible browser, or go elsewhere.</p>
-    <p class="muted">Endpoints: <a href="/status">/status</a> · <a href="/video.mjpeg">/video.mjpeg</a> · <a href="/latest.png">/latest.png</a> · <a href="/events">/events</a> (SSE) · MCP: <code>/mcp</code></p>
-  </section>
-  <section dir="rtl" lang="ar">
-    <h2>باختصار بالعربي</h2>
-    <p><strong>فيديو مباشر حقيقي:</strong> الصورة اللي فوق دي بث حي من المتصفح نفسه — بتتحرك مع شغل الذكاء الاصطناعي لحظة بلحظة. صورة بس، من غير صوت: بث شاشة المتصفح مفيهوش قناة صوت أصلًا.</p>
-    <p>دي صفحة بث مباشر للي الذكاء الاصطناعي بيعمله في المتصفح: كل خطوة بتظهر فوق، والصورة بتتحدّث بعد كل خطوة.</p>
-    <p>تسجيل الدخول بجوجل بيتم <strong>يدويًا مرة واحدة منك أنت</strong>، وبحساب جوجل مخصّص للذكاء الاصطناعي — مش حسابك الشخصي — وممنوع تبعت كلمة السر في الشات أو للذكاء الاصطناعي.</p>
-    <p><strong>الأداة دي مش بتدفع أبدًا:</strong> صفحات الدفع محظورة، وأرقام البطاقات مش بتتكتب.</p>
-    <p><strong>التحقق البشري:</strong> لو موقع طلب "أثبت إنك إنسان" (زي "Just a moment...")، أطلس بيقف وبيوريك تنبيه هنا — ومش بيحلّ التحقق ولا بيتخطاه أبدًا. الحل إنك تحليه مرة واحدة من متصفحك بنفسك.</p>
-  </section>
+
+  <!-- 3) الفيديو + آخر خطوة + التحكم -->
+  <div class="video-card">
+    <div class="video-box">
+      <img id="shot" src="/video.mjpeg" alt="فيديو مباشر من المتصفح">
+      <div id="empty-state" hidden>
+        <div class="big">المتصفح مش شغال لسه</div>
+        <div class="muted">اطلب من الذكاء الاصطناعي يبدأ التصفح (مثلًا: "افتح موقع كذا")، والفيديو هيظهر هنا لحظة بلحظة.</div>
+        <div class="muted small">الفيديو صورة بس، من غير صوت — بث شاشة المتصفح مفيهوش قناة صوت.</div>
+      </div>
+    </div>
+    <div id="last-action"><span class="tag">آخر خطوة</span><span id="last-action-text">بانتظار أول خطوة…</span></div>
+    <div class="controls">
+      <button id="btn-pause" type="button" title="أوقف الذكاء الاصطناعي مؤقتًا">⏸ إيقاف مؤقت</button>
+      <button id="btn-resume" type="button" title="خلي الذكاء الاصطناعي يكمل">▶ استئناف</button>
+      <button id="btn-shot" type="button" title="خد لقطة حالية من المتصفح">📸 لقطة</button>
+      <button id="btn-record" type="button" aria-pressed="true" title="التسجيل بيحفظ السجل واللقطات على الجهاز بس">● تسجيل</button>
+      <span class="muted small" id="ctl-state">التسجيل: شغال</span>
+    </div>
+    <div class="nav-box" style="padding-top:10px">
+      <input id="nav-url" type="url" inputmode="url" placeholder="الصق رابط هنا… مثلًا https://example.com" dir="ltr">
+      <button id="btn-nav" type="button">روح 🚀</button>
+    </div>
+    <div id="nav-result"></div>
+  </div>
+
+  <!-- 4) السجل + الأخطاء + إزاي تستخدم الصفحة -->
+  <div class="grid2">
+    <section>
+      <h2>📋 سجل الإجراءات — كل خطوة عملها الذكاء الاصطناعي</h2>
+      <ul class="log" id="log"><li class="muted">بانتظار الإجراءات…</li></ul>
+    </section>
+    <div style="display:grid;gap:16px;align-content:start">
+      <section>
+        <h2>⚠️ الأخطاء</h2>
+        <ul class="errors" id="errors"><li class="ok-line">لا توجد أخطاء</li></ul>
+      </section>
+      <section>
+        <h2>إزاي تستخدم الصفحة دي؟</h2>
+        <div class="howto">
+          <b>1.</b> الفيديو اللي فوق بيوريك المتصفح لحظة بلحظة — بيتحرك لما الصفحة بتتغير.<br>
+          <b>2.</b> كل خطوة بيعملها الذكاء الاصطناعي بتظهر في السجل بالعربي.<br>
+          <b>3.</b> عايز توقفه؟ دوس <b>إيقاف مؤقت</b>. عايز تفتح صفحة بنفسك؟ الصق الرابط ودوس <b>روح</b>.<br>
+          <b>4.</b> لو موقع طلب تحقق بشري، هتلاقي تنبيه أحمر فوق الفيديو — حله بنفسك من متصفحك.
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <footer>
+    Atlas Alpha 3.1 · الفيديو صورة بس (من غير صوت) · الأداة مش بتدفع أبدًا · روابط: <a href="/status">الحالة</a> · <a href="/video.mjpeg">الفيديو</a> · <a href="/latest.png">آخر لقطة</a> · <a href="/events">الأحداث</a> · MCP: <code>/mcp</code>
+  </footer>
 </main>
+</div>
 <script>
-  const shot = document.getElementById('shot');
-  const logEl = document.getElementById('log');
-  const errEl = document.getElementById('errors');
-  const stepsEl = document.getElementById('steps');
-  const urlEl = document.getElementById('url');
+  const AR_TOOL = {
+    browser_start: "تشغيل المتصفح", browser_navigate: "فتح صفحة", browser_snapshot: "قراءة الصفحة",
+    browser_click: "ضغط على عنصر", browser_type: "كتابة نص", browser_press: "ضغط زر في لوحة المفاتيح",
+    browser_screenshot: "أخذ لقطة", browser_full_screenshot: "أخذ لقطة كاملة", browser_status: "فحص الحالة",
+    browser_google_signin: "فتح تسجيل دخول جوجل", browser_stop: "إيقاف المتصفح", browser_tabs: "تبويبات",
+    browser_extract_text: "قراءة نص الصفحة", browser_set_viewport: "تغيير حجم الشاشة", browser_sitemap: "خريطة الصفحة",
+    browser_pause: "إيقاف مؤقت", browser_resume: "استئناف", browser_mode: "تغيير الوضع",
+    phone_status: "فحص التليفون", windows_status: "فحص ويندوز", iphone_status: "فحص الآيفون",
+    challenge_detected: "⚠️ تحقق بشري ظهر",
+    api_navigate: "فتح صفحة (من هنا)", api_screenshot: "لقطة (من هنا)", api_pause: "إيقاف مؤقت (من هنا)",
+    api_resume: "استئناف (من هنا)", api_record: "تسجيل (من هنا)", api_approve: "موافقة (من هنا)",
+  };
+  const arLabel = (tool) => AR_TOOL[tool] || tool;
+  const fmtTime = (iso) => {
+    try { return new Date(iso).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit", second: "2-digit" }); }
+    catch { return iso || ""; }
+  };
+
+  const shot = document.getElementById("shot");
+  const logEl = document.getElementById("log");
+  const errEl = document.getElementById("errors");
   const entries = [];
   const errors = [];
+  let videoFailed = false;
+  let recordingOn = true;
+
   function renderLog() {
-    logEl.textContent = entries.slice(-30).map(e =>
-      `${e.time}  ${e.tool}  ${JSON.stringify(e.args || {})}  →  ${e.result || ''}`
-    ).join('\n') || '(waiting for actions…)';
+    if (!entries.length) { logEl.innerHTML = '<li class="muted">بانتظار الإجراءات…</li>'; return; }
+    logEl.innerHTML = entries.slice(-30).reverse().map((e) => {
+      const res = (e.result || "").replace(/</g, "&lt;");
+      return `<li><span class="t">${fmtTime(e.time)}</span><b>${arLabel(e.tool)}</b>` +
+        (res ? `<span class="r">${res.slice(0, 220)}</span>` : "") + `</li>`;
+    }).join("");
   }
   function renderErrors() {
-    errEl.textContent = errors.slice(-20).map(e =>
-      `${e.time}  [${e.kind}]  ${e.message}  ${e.url || ''}`
-    ).join('\n') || '(no errors recorded)';
+    if (!errors.length) { errEl.innerHTML = '<li class="ok-line">لا توجد أخطاء</li>'; return; }
+    errEl.innerHTML = errors.slice(-20).reverse().map((e) =>
+      `<li><span class="t">${fmtTime(e.time)}</span>[${e.kind}] ${(e.message || "").replace(/</g, "&lt;").slice(0, 200)}</li>`
+    ).join("");
   }
-  // Live video is primary (the <img> streams /video.mjpeg). If the stream
-  // fails, fall back to the still screenshot (/latest.png) polling.
-  let videoFailed = false;
-  function refreshShot() { shot.src = '/latest.png?t=' + Date.now(); }
+  function setLastAction(e) {
+    document.getElementById("last-action-text").textContent =
+      `${fmtTime(e.time)} — ${arLabel(e.tool)}${e.result ? ": " + e.result.slice(0, 160) : ""}`;
+  }
+  function refreshShot() { shot.src = "/latest.png?t=" + Date.now(); }
   shot.onerror = () => {
     if (!videoFailed) {
       videoFailed = true;
-      document.getElementById('video-state').textContent = '📹 الفيديو المباشر غير متاح — عرض صورة ثابتة تتحدث بعد كل خطوة';
+      document.getElementById("c-video").textContent = "الفيديو غير متاح — عرض صورة ثابتة";
       refreshShot();
     }
   };
+
   async function refreshStatus() {
     try {
-      const r = await fetch('/status');
+      const r = await fetch("/status");
       const s = await r.json();
-      urlEl.textContent = s.url ? `${s.title ? s.title + ' — ' : ''}${s.url}` : '(browser not started yet)';
-      stepsEl.textContent = `(steps: ${s.steps}/${s.maxSteps}${s.mode ? ` · mode: ${s.mode}` : ''}${s.readonly ? ' · READ-ONLY' : ''}${s.paused ? ' · PAUSED' : ''}${s.tabs ? ` · ${s.tabs} tab(s)` : ''})`;
+      const running = !!s.browserRunning;
+      document.getElementById("c-browser").textContent = running ? (s.paused ? "⏸ واقف مؤقتًا" : "✅ شغال") : "⏹ مش شغال";
+      document.getElementById("c-browser-sub").textContent = running ? `${s.tabs || 0} تبويب` : "اطلب من الذكاء الاصطناعي يبدأ";
+      document.getElementById("c-title").textContent = s.title || (running ? "(صفحة بلا عنوان)" : "—");
+      document.getElementById("c-url").textContent = s.url || "";
+      document.getElementById("c-steps").textContent = `${s.steps || 0} / ${s.maxSteps || 100} خطوة`;
+      document.getElementById("c-steps-bar").style.width = `${Math.min(100, ((s.steps || 0) / (s.maxSteps || 100)) * 100)}%`;
+      document.getElementById("c-mode").textContent = s.mode ? `الوضع: ${s.mode}` : "—";
       if (!videoFailed) {
-        const vs = document.getElementById('video-state');
-        if (s.videoLive) vs.textContent = `📹 فيديو مباشر: شغال${s.videoViewers ? ` (${s.videoViewers} مشاهد)` : ''}`;
-        else if (s.browserRunning) vs.textContent = '📹 فيديو مباشر: بيشتغل…';
-        else vs.textContent = '📹 فيديو مباشر: المتصفح مش شغال لسه — ابدأ من الـ AI';
+        document.getElementById("c-video").textContent = s.videoLive
+          ? `📹 الفيديو شغال${s.videoViewers ? ` (${s.videoViewers} مشاهد)` : ""}`
+          : (running ? "📹 الفيديو بيشتغل…" : "📹 الفيديو متوقف");
       }
-      if (s.challenge) document.getElementById('challenge').hidden = false;
-      setCtl(s);
+      document.getElementById("empty-state").hidden = running;
+      document.getElementById("challenge").hidden = !s.challenge;
+      if (Array.isArray(s.recentActions) && s.recentActions.length) setLastAction(s.recentActions[s.recentActions.length - 1]);
       if (Array.isArray(s.errors)) { errors.length = 0; errors.push(...s.errors); renderErrors(); }
+      setCtl(s);
+      document.getElementById("clock").textContent = "آخر تحديث: " + new Date().toLocaleTimeString("ar-EG");
     } catch {}
   }
-  let recordingOn = true;
   function setCtl(s) {
     if (!s) return;
-    if (typeof s.paused === 'boolean') {
-      document.getElementById('btn-pause').setAttribute('aria-pressed', String(s.paused));
-      document.getElementById('btn-resume').setAttribute('aria-pressed', String(!s.paused));
+    if (typeof s.paused === "boolean") {
+      document.getElementById("btn-pause").setAttribute("aria-pressed", String(s.paused));
+      document.getElementById("btn-resume").setAttribute("aria-pressed", String(!s.paused));
     }
-    if (typeof s.recording === 'boolean') {
+    if (typeof s.recording === "boolean") {
       recordingOn = s.recording;
-      document.getElementById('btn-record').setAttribute('aria-pressed', String(s.recording));
+      document.getElementById("btn-record").setAttribute("aria-pressed", String(s.recording));
     }
-    document.getElementById('ctl-state').textContent = `recording: ${recordingOn ? 'on' : 'off'}`;
+    document.getElementById("ctl-state").textContent = `التسجيل: ${recordingOn ? "شغال" : "متوقف"}`;
   }
   async function postCtl(path, body) {
     try {
-      const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : '{}' });
-      setCtl(await r.json());
-    } catch {}
+      const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : "{}" });
+      const j = await r.json();
+      setCtl(j);
+      refreshStatus();
+      return j;
+    } catch { return null; }
   }
-  document.getElementById('btn-pause').onclick = () => postCtl('/api/pause');
-  document.getElementById('btn-resume').onclick = () => postCtl('/api/resume');
-  document.getElementById('btn-record').onclick = () => postCtl('/api/record', { recording: !recordingOn });
-  const es = new EventSource('/events');
+  document.getElementById("btn-pause").onclick = () => postCtl("/api/pause");
+  document.getElementById("btn-resume").onclick = () => postCtl("/api/resume");
+  document.getElementById("btn-record").onclick = () => postCtl("/api/record", { recording: !recordingOn });
+  document.getElementById("btn-shot").onclick = async () => {
+    const b = document.getElementById("btn-shot");
+    b.disabled = true; b.textContent = "📸 جارٍ…";
+    await postCtl("/api/screenshot", {});
+    if (videoFailed) refreshShot();
+    b.disabled = false; b.textContent = "📸 لقطة";
+  };
+  async function doNav() {
+    const input = document.getElementById("nav-url");
+    const url = input.value.trim();
+    const out = document.getElementById("nav-result");
+    if (!url) { out.textContent = "اكتب رابط الأول."; return; }
+    out.textContent = "جارٍ فتح الرابط…";
+    try {
+      const r = await fetch("/api/navigate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }) });
+      const j = await r.json();
+      out.textContent = j.ok ? `✅ اتفتح: ${j.title ? j.title + " — " : ""}${j.url}` : `❌ ${j.error || "تعذّر فتح الرابط"}`;
+      if (j.ok) input.value = "";
+      refreshStatus();
+    } catch { out.textContent = "❌ تعذّر الاتصال بالسيرفر."; }
+  }
+  document.getElementById("btn-nav").onclick = doNav;
+  document.getElementById("nav-url").addEventListener("keydown", (e) => { if (e.key === "Enter") doNav(); });
+
+  const es = new EventSource("/events");
+  const dot = document.getElementById("conn-dot");
+  const connText = document.getElementById("conn-text");
+  es.onopen = () => { dot.classList.remove("off"); connText.textContent = "متصل"; };
+  es.onerror = () => { dot.classList.add("off"); connText.textContent = "غير متصل — بحاول تاني…"; };
   es.onmessage = (ev) => {
     try {
       const d = JSON.parse(ev.data);
-      if (d.type === 'hello' && Array.isArray(d.actions)) { entries.push(...d.actions); renderLog(); }
-      if (d.type === 'hello' && Array.isArray(d.errors)) { errors.push(...d.errors); renderErrors(); }
-      if (d.type === 'action') { entries.push(d); renderLog(); refreshStatus(); }
-      if (d.type === 'error') { errors.push(d); renderErrors(); }
-      if (d.type === 'screenshot' && videoFailed) refreshShot();
-      if (d.type === 'challenge') document.getElementById('challenge').hidden = false;
-      if (d.type === 'challenge_cleared' || d.type === 'resumed') document.getElementById('challenge').hidden = true;
-      if (d.type === 'paused' || d.type === 'resumed' || d.type === 'recording' || d.type === 'mode') refreshStatus();
+      if (d.type === "hello" && Array.isArray(d.actions)) { entries.push(...d.actions); renderLog(); }
+      if (d.type === "hello" && Array.isArray(d.errors)) { errors.push(...d.errors); renderErrors(); }
+      if (d.type === "action") { entries.push(d); renderLog(); setLastAction(d); refreshStatus(); }
+      if (d.type === "error") { errors.push(d); renderErrors(); }
+      if (d.type === "screenshot" && videoFailed) refreshShot();
+      if (d.type === "challenge") document.getElementById("challenge").hidden = false;
+      if (d.type === "challenge_cleared" || d.type === "resumed") document.getElementById("challenge").hidden = true;
+      if (d.type === "paused" || d.type === "resumed" || d.type === "recording" || d.type === "mode") refreshStatus();
     } catch {}
   };
   refreshStatus();

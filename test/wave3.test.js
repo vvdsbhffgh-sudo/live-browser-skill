@@ -13,9 +13,9 @@ import { artemisStatus } from "../server/artemis.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("version is 1.0.3-alpha", () => {
+test("version is 1.0.3-alpha.1", () => {
   const pkg = JSON.parse(readFileSync(path.join(ROOT, "package.json"), "utf8"));
-  assert.equal(pkg.version, "1.0.3-alpha");
+  assert.equal(pkg.version, "1.0.3-alpha.1");
   const src = readFileSync(path.join(ROOT, "server/index.js"), "utf8");
   assert.match(src, /1\.0\.3-alpha/);
 });

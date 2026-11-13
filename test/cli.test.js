@@ -13,7 +13,7 @@ function run(args) {
 }
 
 test("version matches package.json", () => {
-  assert.equal(version(), "1.0.3-alpha");
+  assert.equal(version(), "1.0.3-alpha.1");
 });
 
 test("--help prints usage and exits 0", () => {
@@ -27,7 +27,7 @@ test("--help prints usage and exits 0", () => {
 test("--version prints just the version", () => {
   const out = run(["--version"]);
   assert.equal(out.status, 0, out.stderr);
-  assert.equal(out.stdout.trim(), "1.0.3-alpha");
+  assert.equal(out.stdout.trim(), "1.0.3-alpha.1");
 });
 
 test("parseArgs handles --http, --port and unknown args", () => {

@@ -1,6 +1,6 @@
 # FEATURES.md — Now / Next / Never
 
-Version **1.0.3-alpha (Alpha 3)**. ✅ = shipped and tested. 📋 = planned, not built.
+Version **1.0.3-alpha.1 (Alpha 3.1)**. ✅ = shipped and tested. 📋 = planned, not built.
 Anything under **Never** will not be built, however often it is asked for —
 the reason is written next to it.
 
@@ -14,11 +14,15 @@ the reason is written next to it.
   screenshot, status, Google sign-in, stop.
 - **Payment guard (hard rule)** — checkout/payment URLs, pay buttons, and
   card-like numbers are refused in code (`server/guard.js`), with tests.
-- **Live View** — real live video (`/video.mjpeg`, MJPEG from the CDP
-  screencast, picture only, no audio) + screenshot fallback, current URL,
-  live action log over SSE at `http://localhost:3100/` (English + short
-  Arabic section). Human checks are detected, surfaced with a banner, and
-  auto-pause the browser — Atlas never solves or bypasses them.
+- **Live View** — rebuilt in Alpha 3.1, Arabic-first and organized: status
+  cards (browser / page / steps / mode / video), real live video
+  (`/video.mjpeg`, MJPEG from the CDP screencast, picture only, no audio) +
+  screenshot fallback, a "last step" line in plain Arabic, a clean action log
+  over SSE, an errors panel, and a how-to guide. You can drive the browser
+  from the page: a "go to a link" box (`POST /api/navigate`) and a Screenshot
+  button. Human checks are detected, surfaced with a banner, and auto-pause
+  the browser — Atlas never solves or bypasses them (research in
+  `docs/HUMAN-CHECKS.md`).
 - **Platform guides** — Claude Code, Cursor, Lovable, Replit (with the honest
   note that Lovable/Replit need a deployed remote MCP server and the published
   app does not inherit the browser), plus Railway/Render deploy guides.

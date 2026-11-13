@@ -391,7 +391,7 @@ function pausedGuard() {
 function statusSnapshot() {
   return {
     name: "atlas",
-    version: "1.0.3-alpha",
+    version: "1.0.3-alpha.1",
     startedAt,
     port: PORT,
     headed: HEADED,
@@ -602,7 +602,7 @@ async function elementText(locator) {
 function createMcpServer() {
   const server = new McpServer({
     name: "atlas",
-    version: "1.0.3-alpha",
+    version: "1.0.3-alpha.1",
   });
 
   server.registerTool(
@@ -649,7 +649,7 @@ function createMcpServer() {
       }
       countStep();
       const { page: pg } = await ensureBrowser();
-      await pg.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+      await pg.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
       const challenge = await checkChallenge("browser_navigate");
       const msg =
         `Navigated to ${pg.url()} — ${await titleWithTimeout(pg)}` +
@@ -879,7 +879,7 @@ function createMcpServer() {
     },
     async () => {
       const { page: pg } = await ensureBrowser();
-      await pg.goto("https://accounts.google.com", { waitUntil: "domcontentloaded", timeout: 30000 });
+      await pg.goto("https://accounts.google.com", { waitUntil: "domcontentloaded", timeout: 60000 });
       await new Promise((r) => setTimeout(r, 2000));
       await refreshScreenshot();
       const detected = await detectGoogleAccount();
@@ -984,7 +984,7 @@ function createMcpServer() {
         const p = await context.newPage();
         attachPageListeners(p);
         page = p;
-        if (url) await p.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+        if (url) await p.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
         const msg = `Opened tab ${pages().length - 1}: ${p.url()}`;
         logAction("browser_tabs", { action, url }, msg);
         await refreshScreenshot();
@@ -1430,7 +1430,7 @@ async function handleHttp(req, res) {
     countStep();
     try {
       const { page: pg } = await ensureBrowser();
-      await pg.goto(body.url, { waitUntil: "domcontentloaded", timeout: 30000 });
+      await pg.goto(body.url, { waitUntil: "domcontentloaded", timeout: 60000 });
       logAction("api_navigate", { url: body.url }, `REST navigated to ${pg.url()}`);
       await refreshScreenshot();
       res.writeHead(200, { "Content-Type": "application/json" });

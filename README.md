@@ -2,7 +2,7 @@
 
 ![Atlas logo — globe meridian, Audiowide wordmark](assets/logos/atlas-official-logo.svg)
 
-**Atlas — Alpha 3 (1.0.3-alpha)** · MIT · free and open source. (Repo name is still
+**Atlas — Alpha 3.1 (1.0.3-alpha.1)** · MIT · free and open source. (Repo name is still
 `live-browser-skill` for now — a technical name, kept until publishing.)
 
 A free, open-source **MCP server + Agent Skill** that gives an AI builder
@@ -79,6 +79,14 @@ Config: see `.env.example`. Key variables:
 - **Human-check handling (no bypass)** — when a page shows a human check (Cloudflare "Just a moment...", `__cf_chl_` URL), Atlas pauses, shows a banner in the Live View, and logs it. It never solves, clicks through, or bypasses the check, and it contains no CAPTCHA solver or stealth-bypass library — see `SECURITY.md` ("Human checks").
 - **Hikma Lab setup** — `docs/HIKMA-LAB.md`: the user's Hikma Lab app and Zakat al-Hikma AI on Atlas, with the dedicated Google account kept local only (`ATLAS_GOOGLE_ACCOUNT`).
 
+## Alpha 3.1 (1.0.3-alpha.1): rebuilt Live View, bypass research, slow-load fix
+
+**Alpha 3.1 adds:**
+- **Live View rebuilt from scratch** — the page is now organized and Arabic-first: status cards (browser / current page / steps with progress bar / mode / video), a prominent "last step" line in plain Arabic, a clean action log (newest first, Arabic labels), an errors panel, and a short "how to use this page" guide. The video stays the same real MJPEG stream (picture only, no audio).
+- **You can drive the browser from Live View** — a "go to a link" box (`POST /api/navigate`) plus a Screenshot button (`POST /api/screenshot`), alongside Pause / Resume / Record. A connection indicator and "last updated" time show the page is alive.
+- **Bypass research, documented, not added** — `docs/HUMAN-CHECKS.md` records what was found (2Captcha / Anti-Captcha / CapSolver, stealth plugins, stealth browsers, residential proxies) and why none of it is in Atlas: modern challenges are verdicts, not puzzles; stealth breaks on every detection update; and the hosted server's datacenter IP is the worst signal for Cloudflare. The detection + banner + auto-pause from Alpha 3 stays.
+- **Slow first load fixed** — page navigation timeout raised from 30s to 60s (Railway containers are slow on first load).
+
 - **Real Android phone (Artemis):** [`docs/ARTEMIS.md`](docs/ARTEMIS.md) —
   Google's `google/artemis` (Apache 2.0) drives a real Android phone or
   emulator over MCP. This repo only checks its status (`phone_status`);
@@ -151,7 +159,7 @@ Config: see `.env.example`. Key variables:
 - **No CAPTCHA bypass, no automatic Gmail creation, no merging all
   trending repos into this repo.** These are under **Never** in
   [`FEATURES.md`](FEATURES.md), with the reasons.
-- **Live View has no auth in 1.0.3-alpha.** Run it on `localhost`, or put a
+- **Live View has no auth in 1.0.3-alpha.1.** Run it on `localhost`, or put a
   deployed instance behind HTTPS + access controls. See `SECURITY.md`.
 - **Local VM check (2026-11-13):** Chromium in the build VM could not reach
   the public internet directly (`ERR_TUNNEL_CONNECTION_FAILED`), so

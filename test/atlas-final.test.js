@@ -13,7 +13,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 test("package is Atlas, Alpha 3", () => {
   const pkg = JSON.parse(readFileSync(path.join(ROOT, "package.json"), "utf8"));
   assert.equal(pkg.name, "atlas");
-  assert.equal(pkg.version, "1.0.3-alpha");
+  assert.equal(pkg.version, "1.0.3-alpha.1");
   // Repo URL stays the technical name until publishing (see NAME.md).
   assert.match(pkg.repository.url, /live-browser-skill/);
 });

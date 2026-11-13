@@ -29,7 +29,7 @@ test("live video: Live View page streams it, with a still fallback", () => {
   const html = readFileSync(path.join(ROOT, "server/live-view.html"), "utf8");
   assert.match(html, /src="\/video\.mjpeg"/);
   assert.match(html, /\/latest\.png/); // fallback when the stream is unavailable
-  assert.match(html, /video-state/);
+  assert.match(html, /id="c-video"/); // video status shown in the status cards (Alpha 3.1)
   assert.match(html, /فيديو مباشر/);
 });
 
