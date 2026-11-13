@@ -138,3 +138,16 @@ no tool by that name is assumed, invented, or integrated here. A
 connection is only documented once the real tool, its real endpoint,
 and its real account requirements are known. Nothing in this file
 describes a fake integration.
+
+## Alpha 2 (1.0.2-alpha): CLI + install doc + PWA
+
+- **`atlas` CLI** — `server/cli.js`, exposed as the `atlas` command via
+  the `bin` field in `package.json` after `npm link`. `atlas` (stdio),
+  `atlas --http` (Live View + REST), `atlas --http --port 4000`,
+  `atlas --version`, `atlas --help`. Thin wrapper over `server/index.js`.
+- **Every connection method in one place** — `docs/INSTALL.md`:
+  clone/ZIP install, stdio MCP (Claude Code, Cursor, any MCP client),
+  remote MCP (Lovable, Replit — deploy first), REST API, SSE `/events`,
+  the `atlas` CLI, and the Dashboard PWA installed on a phone via
+  Add to Home screen. **No native APK**: Atlas is a Node.js server;
+  the PWA install is the phone "app" route.
