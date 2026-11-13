@@ -1,1 +1,403 @@
-{"$schema":"model-router example — copy to model-router.json and edit; never commit real keys","comment":"The router tries entries in order and falls back on failure or limit. Paid entries are used ONLY if you list them yourself. Free limits are real and pooled, not limitless: OpenRouter :free is 20 req/min, 50/day, 1000/day after $10 lifetime purchases; Gemini and Groq free tiers have their own per-model caps (check their consoles); Ollama local has no meter, limited by your hardware. See docs/FREE-MODELS.md. rank = strength tier for THAT task (1 = strongest in this config for this task, 3 = weakest fallback), judged on public benchmark results and task capability — not on fame. A lesser-known model can outrank a famous one for a specific task.","limits":{"groq_free":{"note":"per-model rate limits — check the Groq console for current numbers"},"maxQueuedTasks":20,"neverAutoUpgradeToPaid":true,"onLimit":"queue-and-pause","openrouter_free":{"perDay":50,"perDayAfter10UsdLifetime":1000,"perMinute":20},"retryDelaySeconds":60},"routes":{"chat":[{"model":":free","note":"20 req/min, 50/day","provider":"openrouter","rank":2},{"model":"groq-free","note":"Groq free tier — fast fallback, own per-model caps","provider":"groq","rank":2},{"model":"gemini-flash","note":"Gemini free tier — check current quota in AI Studio","provider":"gemini","rank":1},{"model":"llama3.1:8b","note":"local fallback","provider":"ollama","rank":3}],"code":[{"model":"qwen2.5-coder:7b","note":"local, no meter — limited by your hardware","provider":"ollama","rank":2},{"model":"openrouter/free","note":"fallback only; counts against the 50/day free limit","provider":"openrouter","rank":3},{"model":"groq-free","note":"Groq free tier fallback","provider":"groq","rank":2}],"phone":[{"model":"as-configured-in-artemis","note":"Artemis needs its own multimodal model key; see docs/ARTEMIS.md","provider":"artemis","rank":1}],"vision":[{"model":"gemini-flash","note":"Gemini free tier — check current quota in AI Studio","provider":"gemini","rank":1},{"model":"groq-free-vision","note":"Groq free tier — only if the model supports vision","provider":"groq","rank":2},{"model":"llava:7b","note":"local vision fallback, slower","provider":"ollama","rank":3}]},"version":1}
+{
+  "$schema": "model-router example — copy to model-router.json and edit; never commit real keys",
+  "comment": "Alpha 2: 50+ models, ranked by task strength — NOT by fame. rank = strength tier for THAT task (1 = strongest in this config for this task, 3 = weakest fallback), judged on public benchmark results and task capability. A lesser-known model can outrank a famous one for a specific task. The router tries entries in order and falls back on failure or limit (see scripts/route-model.js). Paid entries are used ONLY if you list them yourself. Free limits are real and pooled, not limitless: OpenRouter :free is 20 req/min, 50/day, 1000/day after $10 lifetime purchases; Groq free is per-model (main chat models 30 req/min, 1000/day, 8K tok/min, 200K tok/day); Gemini and SambaNova free tiers have their own per-model caps (check their consoles); Ollama local has no meter, limited by your hardware. Free-model rosters change often — verify in each provider console before relying on an entry. See docs/FREE-MODELS.md and docs/MODEL-ROUTER.md.",
+  "limits": {
+    "groq_free": {
+      "note": "Per-model: main chat models 30 req/min, 1000/day, 8K tok/min, 200K tok/day; Whisper 20 req/min, 2000/day; Orpheus 10 req/min, 100/day; safeguard 3 req/min. Limits apply per organization, not per key."
+    },
+    "gemini_free": {
+      "note": "Per-model quotas in Google AI Studio; check current numbers there."
+    },
+    "maxQueuedTasks": 20,
+    "neverAutoUpgradeToPaid": true,
+    "onLimit": "queue-and-pause",
+    "openrouter_free": {
+      "perDay": 50,
+      "perDayAfter10UsdLifetime": 1000,
+      "perMinute": 20
+    },
+    "retryDelaySeconds": 60,
+    "sambanova_free": {
+      "note": "Free tier, no card — verify the current roster and caps in the SambaNova console."
+    }
+  },
+  "routes": {
+    "chat": [
+      {
+        "provider": "openrouter",
+        "model": "thinkingmachines/inkling:free",
+        "rank": 1,
+        "note": "1M context, largest free text model — 20 req/min, 50/day"
+      },
+      {
+        "provider": "openrouter",
+        "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "rank": 1,
+        "note": "550B MoE, 1M context — 20 req/min, 50/day"
+      },
+      {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "rank": 1,
+        "note": "Groq free: 30 req/min, 1000/day, 8K tok/min, 200K tok/day"
+      },
+      {
+        "provider": "gemini",
+        "model": "gemini-2.5-flash",
+        "rank": 1,
+        "note": "Gemini free tier — check current quota in AI Studio"
+      },
+      {
+        "provider": "openrouter",
+        "model": "minimax/minimax-m3.1-flash:free",
+        "rank": 2,
+        "note": "20 req/min, 50/day"
+      },
+      {
+        "provider": "openrouter",
+        "model": "nvidia/nemotron-3.5-super-vl:free",
+        "rank": 2,
+        "note": "Multimodal, 1M context — 20 req/min, 50/day"
+      },
+      {
+        "provider": "openrouter",
+        "model": "google/gemma-4-31b-it:free",
+        "rank": 2,
+        "note": "20 req/min, 50/day"
+      },
+      {
+        "provider": "openrouter",
+        "model": "google/gemma-4-26b-a4b-it:free",
+        "rank": 2,
+        "note": "20 req/min, 50/day"
+      },
+      {
+        "provider": "openrouter",
+        "model": "recursive/flint-v1.0:free",
+        "rank": 2,
+        "note": "20 req/min, 50/day"
+      },
+      {
+        "provider": "openrouter",
+        "model": "xingchen-agi/xing4.0-29b-a4b:free",
+        "rank": 2,
+        "note": "20 req/min, 50/day"
+      },
+      {
+        "provider": "sambanova",
+        "model": "Meta-Llama-3.3-70B-Instruct",
+        "rank": 2,
+        "note": "SambaNova free tier — verify in console, no card"
+      },
+      {
+        "provider": "sambanova",
+        "model": "DeepSeek-R1-Distill-Llama-70B",
+        "rank": 2,
+        "note": "SambaNova free tier — verify in console, no card"
+      },
+      {
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "rank": 2,
+        "note": "Groq free: 30 req/min, 1000/day, 8K tok/min, 200K tok/day"
+      },
+      {
+        "provider": "gemini",
+        "model": "gemini-2.0-flash",
+        "rank": 2,
+        "note": "Gemini free tier — check current quota in AI Studio"
+      },
+      {
+        "provider": "gemini",
+        "model": "gemma-3-27b-it",
+        "rank": 2,
+        "note": "Gemini free tier — check current quota in AI Studio"
+      },
+      {
+        "provider": "ollama",
+        "model": "deepseek-r1:8b",
+        "rank": 2,
+        "note": "Local reasoning, no meter — limited by your hardware"
+      },
+      {
+        "provider": "ollama",
+        "model": "qwen2.5:14b",
+        "rank": 2,
+        "note": "Local, no meter — limited by your hardware"
+      },
+      {
+        "provider": "ollama",
+        "model": "mistral:7b",
+        "rank": 3,
+        "note": "Local, no meter — limited by your hardware"
+      },
+      {
+        "provider": "openrouter",
+        "model": "liquid/lfm-2.5-2.6b:free",
+        "rank": 3,
+        "note": "Small and fast — 20 req/min, 50/day"
+      },
+      {
+        "provider": "openrouter",
+        "model": "inclusionai/ling-3.1-flash",
+        "rank": 3,
+        "note": "Zero-priced, no :free suffix — verify it is still $0"
+      },
+      {
+        "provider": "openrouter",
+        "model": "stealth/space-bunny-alpha",
+        "rank": 3,
+        "note": "Zero-priced anonymous model — verify it is still $0"
+      },
+      {
+        "provider": "openrouter",
+        "model": "openrouter/free",
+        "rank": 3,
+        "note": "Picks a free model at random — counts against the 50/day free limit"
+      },
+      {
+        "provider": "ollama",
+        "model": "llama3.1:8b",
+        "rank": 3,
+        "note": "Local fallback, no meter — limited by your hardware"
+      },
+      {
+        "provider": "ollama",
+        "model": "qwen2.5:7b",
+        "rank": 3,
+        "note": "Local fallback, no meter — limited by your hardware"
+      },
+      {
+        "provider": "ollama",
+        "model": "llama3.2:3b",
+        "rank": 3,
+        "note": "Tiny local fallback, no meter — limited by your hardware"
+      },
+      {
+        "provider": "groq",
+        "model": "openai/gpt-oss-safeguard-20b",
+        "rank": 3,
+        "note": "Safety classifier only (3 req/min) — not general chat"
+      },
+      {
+        "provider": "groq",
+        "model": "meta-llama/llama-prompt-guard-2-86m",
+        "rank": 3,
+        "note": "Safety classifier only — not general chat"
+      },
+      {
+        "provider": "groq",
+        "model": "meta-llama/llama-prompt-guard-2-22m",
+        "rank": 3,
+        "note": "Safety classifier only — not general chat"
+      }
+    ],
+    "code": [
+      {
+        "provider": "openrouter",
+        "model": "cohere/north-mini-code:free",
+        "rank": 1,
+        "note": "Built for code — 20 req/min, 50/day"
+      },
+      {
+        "provider": "ollama",
+        "model": "qwen2.5-coder:14b",
+        "rank": 1,
+        "note": "Local, strong coder, no meter — limited by your hardware"
+      },
+      {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "rank": 1,
+        "note": "Groq free: 30 req/min, 1000/day, 8K tok/min, 200K tok/day"
+      },
+      {
+        "provider": "openrouter",
+        "model": "recursive/flint-v1.0:free",
+        "rank": 2,
+        "note": "20 req/min, 50/day"
+      },
+      {
+        "provider": "sambanova",
+        "model": "Qwen3-32B",
+        "rank": 2,
+        "note": "SambaNova free tier — verify in console, no card"
+      },
+      {
+        "provider": "gemini",
+        "model": "gemini-2.5-flash",
+        "rank": 2,
+        "note": "Gemini free tier — check current quota in AI Studio"
+      },
+      {
+        "provider": "ollama",
+        "model": "qwen2.5-coder:7b",
+        "rank": 2,
+        "note": "Local, no meter — limited by your hardware"
+      },
+      {
+        "provider": "ollama",
+        "model": "deepseek-coder-v2:16b",
+        "rank": 2,
+        "note": "Local, no meter — limited by your hardware"
+      },
+      {
+        "provider": "ollama",
+        "model": "starcoder2:7b",
+        "rank": 2,
+        "note": "Local, no meter — limited by your hardware"
+      },
+      {
+        "provider": "openrouter",
+        "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        "rank": 2,
+        "note": "Reasoning model — 20 req/min, 50/day"
+      },
+      {
+        "provider": "openrouter",
+        "model": "thinkingmachines/inkling-small:free",
+        "rank": 2,
+        "note": "1M context — 20 req/min, 50/day"
+      },
+      {
+        "provider": "ollama",
+        "model": "mixtral:8x7b",
+        "rank": 2,
+        "note": "Local MoE, no meter — limited by your hardware"
+      },
+      {
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "rank": 3,
+        "note": "Groq free: 30 req/min, 1000/day, 8K tok/min, 200K tok/day"
+      },
+      {
+        "provider": "gemini",
+        "model": "gemini-2.5-flash-lite",
+        "rank": 3,
+        "note": "Fast and light — Gemini free tier"
+      },
+      {
+        "provider": "ollama",
+        "model": "codellama:13b",
+        "rank": 3,
+        "note": "Local, no meter — limited by your hardware"
+      },
+      {
+        "provider": "ollama",
+        "model": "phi4:14b",
+        "rank": 3,
+        "note": "Local, no meter — limited by your hardware"
+      },
+      {
+        "provider": "openrouter",
+        "model": "openrouter/free",
+        "rank": 3,
+        "note": "Fallback only; counts against the 50/day free limit"
+      }
+    ],
+    "vision": [
+      {
+        "provider": "gemini",
+        "model": "gemini-2.5-flash",
+        "rank": 1,
+        "note": "Multimodal — Gemini free tier"
+      },
+      {
+        "provider": "openrouter",
+        "model": "nvidia/nemotron-3.5-super-vl:free",
+        "rank": 1,
+        "note": "Vision-language, 1M context — 20 req/min, 50/day"
+      },
+      {
+        "provider": "openrouter",
+        "model": "google/gemma-4-26b-a4b-it:free",
+        "rank": 2,
+        "note": "Image + text + video — 20 req/min, 50/day"
+      },
+      {
+        "provider": "openrouter",
+        "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        "rank": 2,
+        "note": "Omni: text, audio, image, video — 20 req/min, 50/day"
+      },
+      {
+        "provider": "openrouter",
+        "model": "dots-studio/dots-3-note-preview:free",
+        "rank": 2,
+        "note": "Text + image — 20 req/min, 50/day"
+      },
+      {
+        "provider": "groq",
+        "model": "qwen/qwen3.8-27b",
+        "rank": 2,
+        "note": "Preview: only Groq model with image input; may be discontinued — 30 req/min, 1000/day"
+      },
+      {
+        "provider": "gemini",
+        "model": "gemini-2.0-flash",
+        "rank": 2,
+        "note": "Multimodal — Gemini free tier"
+      },
+      {
+        "provider": "gemini",
+        "model": "gemma-3-27b-it",
+        "rank": 3,
+        "note": "Multimodal — Gemini free tier"
+      },
+      {
+        "provider": "ollama",
+        "model": "gemma3:12b",
+        "rank": 3,
+        "note": "Local vision, no meter — limited by your hardware"
+      },
+      {
+        "provider": "ollama",
+        "model": "llava:13b",
+        "rank": 3,
+        "note": "Local vision fallback, slower — limited by your hardware"
+      },
+      {
+        "provider": "ollama",
+        "model": "llava:7b",
+        "rank": 3,
+        "note": "Local vision fallback, slower — limited by your hardware"
+      }
+    ],
+    "audio": [
+      {
+        "provider": "groq",
+        "model": "whisper-large-v3-turbo",
+        "rank": 1,
+        "note": "Speech-to-text — Groq free: 20 req/min, 2000/day, 8h audio/day"
+      },
+      {
+        "provider": "groq",
+        "model": "whisper-large-v3",
+        "rank": 1,
+        "note": "Speech-to-text — Groq free: 20 req/min, 2000/day, 8h audio/day"
+      },
+      {
+        "provider": "groq",
+        "model": "canopylabs/orpheus-v1-english",
+        "rank": 2,
+        "note": "Text-to-speech preview — 10 req/min, 100/day"
+      },
+      {
+        "provider": "groq",
+        "model": "canopylabs/orpheus-arabic-saudi",
+        "rank": 2,
+        "note": "Arabic text-to-speech preview — 10 req/min, 100/day"
+      }
+    ],
+    "phone": [
+      {
+        "provider": "artemis",
+        "model": "as-configured-in-artemis",
+        "rank": 1,
+        "note": "Artemis needs its own multimodal model key; see docs/ARTEMIS.md"
+      }
+    ]
+  },
+  "version": 2
+}
