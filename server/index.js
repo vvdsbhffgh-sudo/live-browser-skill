@@ -239,7 +239,7 @@ function pausedGuard() {
 function statusSnapshot() {
   return {
     name: "atlas",
-    version: "1.0.1-alpha",
+    version: "1.0.2-alpha",
     startedAt,
     port: PORT,
     headed: HEADED,
@@ -440,7 +440,7 @@ async function elementText(locator) {
 function createMcpServer() {
   const server = new McpServer({
     name: "atlas",
-    version: "1.0.1-alpha",
+    version: "1.0.2-alpha",
   });
 
   server.registerTool(
