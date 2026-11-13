@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f6bff">
+<meta name="description" content="Atlas control dashboard — watch the AI browser live, switch modes, pause, approve, and check every device.">
+<title>Atlas — Dashboard</title>
+<link rel="manifest" href="/dashboard/manifest.json">
+<link rel="icon" href="/dashboard/icon-192.png">
+<link rel="apple-touch-icon" href="/dashboard/icon-192.png">
+<style>
+  /* Atlas Dashboard — Material 3 Expressive tokens, hand-written in CSS.
+     No external UI library. Full token documentation: docs/DESIGN.md.
+     Light theme is the default; the dark scheme follows the OS setting. */
+  :root {
+    /* Colour — seed #2f6bff, M3 Expressive roles */
+    --md-primary: #2f6bff;
+    --md-on-primary: #ffffff;
+    --md-primary-container: #dbe6ff;
+    --md-on-primary-container: #001a4d;
+    --md-secondary: #4d5f7a;
+    --md-secondary-container: #dbe6f5;
+    --md-tertiary: #7a4d8f;
+    --md-tertiary-container: #f2dbf5;
+    --md-error: #ba1a1a;
+    --md-error-container: #ffdad6;
+    --md-surface: #f7f7fc;
+    --md-surface-container: #eceef4;
+    --md-surface-container-high: #e2e5ec;
+    --md-on-surface: #1a1b20;
+    --md-on-surface-variant: #44474f;
+    --md-outline: #c4c6d0;
+    --md-success: #146c2e;
+    --md-success-container: #b8f0c2;
+    /* Shape — Expressive: big, round, friendly */
+    --md-shape-s: 12px;
+    --md-shape-m: 20px;
+    --md-shape-l: 28px;
+    --md-shape-full: 999px;
+    /* Motion — Expressive spring (bouncy, physical) + emphasized standard */
+    --md-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --md-emphasized: cubic-bezier(0.2, 0, 0, 1);
+    --md-duration: 450ms;
+    /* Type — clear system stack, generous line height */
+    --md-font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Arabic", sans-serif;
+    --md-title-size: 22px;
+    --md-title-line: 28px;
+    --md-body-size: 14px;
+    --md-body-line: 20px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --md-primary: #a8c7fa;
+      --md-on-primary: #002f6e;
+      --md-primary-container: #28427a;
+      --md-on-primary-container: #dbe6ff;
+      --md-secondary-container: #3a475c;
+      --md-tertiary-container: #4d3358;
+      --md-error-container: #5c1512;
+      --md-surface: #121318;
+      --md-surface-container: #1e2026;
+      --md-surface-container-high: #2a2d34;
+      --md-on-surface: #e6e7ec;
+      --md-on-surface-variant: #c4c6d0;
+      --md-outline: #3f434c;
+      --md-success-container: #0d3d1c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--md-surface); color: var(--md-on-surface);
+    font-family: var(--md-font); font-size: var(--md-body-size); line-height: var(--md-body-line);
+  }
+  header {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 14px 20px;
+    background: color-mix(in srgb, var(--md-surface) 88%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--md-outline);
+  }
+  .logo {
+    width: 44px; height: 44px; border-radius: var(--md-shape-m);
+    background: var(--md-primary); color: var(--md-on-primary);
+    display: grid; place-items: center; font-size: 24px; font-weight: 800;
+    transition: transform var(--md-duration) var(--md-spring);
+  }
+  .logo:active { transform: scale(0.9) rotate(-4deg); }
+  h1 { font-size: var(--md-title-size); line-height: var(--md-title-line); margin: 0; }
+  .sub { color: var(--md-on-surface-variant); font-size: 13px; }
+  .badge-live {
+    background: var(--md-error); color: #fff; font-weight: 800; letter-spacing: 1px;
+    padding: 6px 12px; border-radius: var(--md-shape-full); font-size: 12px;
+  }
+  .badge-live::before { content: "● "; animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .chip {
+    padding: 6px 14px; border-radius: var(--md-shape-full); font-weight: 700; font-size: 13px;
+    background: var(--md-primary-container); color: var(--md-on-primary-container);
+  }
+  .chip.muted { background: var(--md-surface-container-high); color: var(--md-on-surface-variant); }
+  .chip.ok { background: var(--md-success-container); color: var(--md-success); }
+  main { padding: 20px; display: grid; gap: 20px; max-width: 1180px; margin: 0 auto; }
+  .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .card {
+    background: var(--md-surface-container); border-radius: var(--md-shape-l);
+    padding: 20px; border: 1px solid var(--md-outline);
+    transition: transform var(--md-duration) var(--md-spring), box-shadow var(--md-duration) var(--md-emphasized);
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+  .card h2 { font-size: 18px; margin: 0 0 12px; }
+  .card p { margin: 6px 0; }
+  .shot-wrap { border-radius: var(--md-shape-l); overflow: hidden; background: #000; }
+  .shot-wrap img { display: block; width: 100%; }
+  .url { color: var(--md-primary); word-break: break-all; font-weight: 600; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  button {
+    font: inherit; font-weight: 700; cursor: pointer;
+    padding: 12px 22px; border-radius: var(--md-shape-full); border: none;
+    transition: transform var(--md-duration) var(--md-spring), background var(--md-duration) var(--md-emphasized), box-shadow var(--md-duration) var(--md-emphasized);
+  }
+  button:hover { transform: translateY(-1px); }
+  button:active { transform: scale(0.94); }
+  .btn-primary { background: var(--md-primary); color: var(--md-on-primary); box-shadow: 0 4px 14px rgba(47,107,255,0.35); }
+  .btn-tonal { background: var(--md-secondary-container); color: var(--md-on-surface); }
+  .btn-outline { background: transparent; border: 2px solid var(--md-outline); color: var(--md-on-surface); }
+  button[aria-pressed="true"] { outline: 3px solid var(--md-primary); outline-offset: 2px; }
+  .btn-danger { background: var(--md-error-container); color: var(--md-error); }
+  .btn-ok { background: var(--md-success-container); color: var(--md-success); }
+  pre {
+    white-space: pre-wrap; word-break: break-word; font-size: 12.5px; line-height: 1.5;
+    max-height: 300px; overflow: auto; margin: 0;
+    background: var(--md-surface-container-high); border-radius: var(--md-shape-m); padding: 12px 14px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  td, th { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--md-outline); vertical-align: top; }
+  th { color: var(--md-on-surface-variant); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .dot.on { background: var(--md-success); }
+  .dot.off { background: var(--md-outline); }
+  .muted { color: var(--md-on-surface-variant); font-size: 13px; }
+  footer { padding: 0 20px 28px; max-width: 1180px; margin: 0 auto; }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" aria-hidden="true">A</div>
+  <div>
+    <h1>Atlas Dashboard</h1>
+    <div class="sub">Alpha 1.0.1 · control the AI browser, live</div>
+  </div>
+  <span class="badge-live">LIVE</span>
+  <span class="chip" id="mode-chip">mode: …</span>
+  <span class="chip muted" id="steps-chip">steps: …</span>
+  <span class="chip muted" id="rec-chip">recording: …</span>
+</header>
+<main>
+  <section class="card">
+    <h2>Live View — what the AI sees</h2>
+    <p><span class="url" id="url">(browser not started yet)</span></p>
+    <div class="shot-wrap"><img id="shot" alt="Latest browser screenshot — updates automatically"></div>
+    <p style="margin-top:14px" class="btn-row">
+      <button class="btn-primary" id="btn-pause" type="button">⏸ Pause</button>
+      <button class="btn-tonal" id="btn-resume" type="button">▶ Resume</button>
+      <button class="btn-ok" id="btn-approve" type="button" aria-pressed="false" title="Approve sensitive actions (delete/send/publish) for this session only. Click again to revoke.">✓ Approve sensitive</button>
+      <button class="btn-outline" id="btn-record" type="button" aria-pressed="true" title="Recording saves the action log + screenshots to live/ on this machine only.">● Record</button>
+    </p>
+    <p class="muted" id="ctl-state">Paused: no · Sensitive approved: no · Recording: on</p>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Agents</h2>
+      <p class="muted">From <code>config/agents.json</code> (or the example config). Live means that agent's server answers on its port right now.</p>
+      <div id="agents">(loading…)</div>
+    </section>
+    <section class="card">
+      <h2>Model router</h2>
+      <p class="muted">Pooled free models — large pooled credit, never limitless. Rank 1 = strongest for the task.</p>
+      <div id="router">(loading…)</div>
+    </section>
+    <section class="card">
+      <h2>Devices</h2>
+      <p class="muted">Status only — Atlas never touches a device by itself.</p>
+      <div id="devices">(loading…)</div>
+    </section>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Live action log</h2>
+      <pre id="log">(waiting for actions…)</pre>
+    </section>
+    <section class="card">
+      <h2>Console &amp; network errors</h2>
+      <pre id="errors">(no errors recorded)</pre>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>How this dashboard works</h2>
+    <p>Same server, same port: this page is served by Atlas at <code>/dashboard</code>. It reads <code>/status</code> and the live event stream <code>/events</code> (SSE). Pause stops the agent so you can take over; Resume lets it continue; <strong>Approve</strong> allows sensitive actions (delete / send / publish) for this session only — click again to revoke; Record starts/stops saving the session locally.</p>
+    <p><strong>Atlas never pays.</strong> Checkout pages and card numbers are blocked in code. Google sign-in is manual, once, by you, with a dedicated account.</p>
+    <p class="muted">Endpoints: <a href="/status">/status</a> · <a href="/latest.png">/latest.png</a> · <a href="/events">/events</a> · MCP: <code>/mcp</code> · Live View: <a href="/">/</a></p>
+    <p class="muted" id="install-note">Install as an app: use your browser's "Install" / "Add to Home screen" — Atlas ships a PWA manifest + service worker.</p>
+  </section>
+</main>
+<footer>
+  <p class="muted">Atlas Alpha 1.0.1 · free and open source (MIT) · <span dir="rtl" lang="ar">لوحة تحكم أطلس: شوف المتصفح لايف، وقّف واستأنف ووافق، وتابع الوكلاء والنماذج.</span></p>
+</footer>
+<script>
+  const shot = document.getElementById('shot');
+  const logEl = document.getElementById('log');
+  const errEl = document.getElementById('errors');
+  const entries = [];
+  const errors = [];
+  let recordingOn = true;
+  let approved = false;
+  let paused = false;
+
+  function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function renderLog() {
+    logEl.textContent = entries.slice(-30).map(e =>
+      `${e.time}  ${e.tool}  ${JSON.stringify(e.args || {})}  →  ${e.result || ''}`
+    ).join('\n') || '(waiting for actions…)';
+  }
+  function renderErrors() {
+    errEl.textContent = errors.slice(-20).map(e =>
+      `${e.time}  [${e.kind}]  ${e.message}  ${e.url || ''}`
+    ).join('\n') || '(no errors recorded)';
+  }
+  function refreshShot() { shot.src = '/latest.png?t=' + Date.now(); }
+  function setCtl() {
+    document.getElementById('ctl-state').textContent =
+      `Paused: ${paused ? 'yes' : 'no'} · Sensitive approved: ${approved ? 'yes (this session only)' : 'no'} · Recording: ${recordingOn ? 'on' : 'off'}`;
+    document.getElementById('btn-approve').setAttribute('aria-pressed', String(approved));
+    document.getElementById('btn-record').setAttribute('aria-pressed', String(recordingOn));
+    document.getElementById('btn-pause').setAttribute('aria-pressed', String(paused));
+  }
+  async function postCtl(path, body) {
+    try {
+      const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : '{}' });
+      const s = await r.json();
+      if (typeof s.paused === 'boolean') paused = s.paused;
+      if (typeof s.recording === 'boolean') recordingOn = s.recording;
+      if (typeof s.allowSensitive === 'boolean') approved = s.allowSensitive;
+      setCtl(); refreshStatus();
+    } catch {}
+  }
+  document.getElementById('btn-pause').onclick = () => postCtl('/api/pause');
+  document.getElementById('btn-resume').onclick = () => postCtl('/api/resume');
+  document.getElementById('btn-approve').onclick = () => postCtl('/api/approve', { allow: !approved });
+  document.getElementById('btn-record').onclick = () => postCtl('/api/record', { recording: !recordingOn });
+
+  function chip(text, cls) { return `<span class="chip ${cls || 'muted'}">${esc(text)}</span>`; }
+  function deviceRow(label, st) {
+    if (!st) return `<p>${esc(label)}: <span class="muted">unknown</span></p>`;
+    const ok = st.configured;
+    return `<p><span class="dot ${ok ? 'on' : 'off'}"></span><strong>${esc(label)}</strong> — ${esc(st.status)}${st.configured && st.reachable !== undefined ? ` · reachable: ${st.reachable ? 'yes' : 'no'}` : ''}<br><span class="muted">${esc(st.message || '')}</span></p>`;
+  }
+  async function probeAgent(port) {
+    try {
+      const c = new AbortController();
+      const t = setTimeout(() => c.abort(), 1500);
+      const r = await fetch(`http://localhost:${port}/status`, { signal: c.signal });
+      clearTimeout(t);
+      if (!r.ok) return false;
+      const s = await r.json();
+      return { live: true, mode: s.mode, steps: s.steps, url: s.url };
+    } catch { return { live: false }; }
+  }
+  async function refreshStatus() {
+    try {
+      const r = await fetch('/status');
+      const s = await r.json();
+      document.getElementById('url').textContent = s.url ? `${s.title ? s.title + ' — ' : ''}${s.url}` : '(browser not started yet)';
+      document.getElementById('mode-chip').textContent = `mode: ${s.mode || '—'}${s.modelRoute ? ` · ${s.modelRoute}` : ''}`;
+      document.getElementById('steps-chip').textContent = `steps: ${s.steps}/${s.maxSteps}${s.readonly ? ' · READ-ONLY' : ''}${s.paused ? ' · PAUSED' : ''}`;
+      document.getElementById('rec-chip').textContent = `recording: ${s.recording ? 'on' : 'off'}`;
+      paused = !!s.paused; recordingOn = s.recording !== false; approved = !!s.allowSensitive;
+      setCtl();
+      if (Array.isArray(s.errors)) { errors.length = 0; errors.push(...s.errors); renderErrors(); }
+      document.getElementById('devices').innerHTML =
+        deviceRow('Android phone (Artemis)', s.phone) +
+        deviceRow('Windows (UFO)', s.windows) +
+        deviceRow('iPhone (iphone-control)', s.iphone);
+      if (s.modelRouter?.routes) {
+        document.getElementById('router').innerHTML = '<table><tr><th>Task</th><th>Chain (rank 1 = strongest)</th></tr>' +
+          Object.entries(s.modelRouter.routes).map(([kind, chain]) =>
+            `<tr><td><strong>${esc(kind)}</strong></td><td>${chain.map(e => `${esc(e.provider)}/${esc(e.model)} · rank ${e.rank ?? '?'}`).join('<br>')}</td></tr>`
+          ).join('') + '</table>' +
+          `<p class="muted">${esc(s.modelRouter.note || '')}</p>`;
+      } else {
+        document.getElementById('router').innerHTML = '<p class="muted">Model router config not found.</p>';
+      }
+      if (Array.isArray(s.agents)) {
+        const rows = await Promise.all(s.agents.map(async (a) => {
+          const probe = await probeAgent(a.port);
+          return `<tr><td><span class="dot ${probe.live ? 'on' : 'off'}"></span><strong>${esc(a.name)}</strong><br><span class="muted">${esc(a.role || '')}</span></td><td>port ${esc(a.port)}<br><span class="muted">${probe.live ? `live · mode ${esc(probe.mode || '')} · ${probe.steps ?? '?'} steps` : 'offline'}</span></td><td>${esc(a.modelRoute || '')}</td></tr>`;
+        }));
+        document.getElementById('agents').innerHTML =
+          `<table><tr><th>Agent</th><th>Status</th><th>Model route</th></tr>${rows.join('')}</table>` +
+          `<p class="muted">Source: ${esc(s.agentsSource || 'config')} · each agent has its own browser profile + Google account (see docs/MULTI-AGENT.md).</p>`;
+      }
+    } catch {}
+  }
+  const es = new EventSource('/events');
+  es.onmessage = (ev) => {
+    try {
+      const d = JSON.parse(ev.data);
+      if (d.type === 'hello' && Array.isArray(d.actions)) { entries.push(...d.actions); renderLog(); }
+      if (d.type === 'hello' && Array.isArray(d.errors)) { errors.push(...d.errors); renderErrors(); }
+      if (d.type === 'action') { entries.push(d); renderLog(); refreshStatus(); }
+      if (d.type === 'error') { errors.push(d); renderErrors(); }
+      if (d.type === 'screenshot') refreshShot();
+      if (['paused', 'resumed', 'recording', 'mode'].includes(d.type)) refreshStatus();
+    } catch {}
+  };
+  refreshShot(); refreshStatus();
+  setInterval(refreshShot, 5000);
+  setInterval(refreshStatus, 5000);
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/dashboard/sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
