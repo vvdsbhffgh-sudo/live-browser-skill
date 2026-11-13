@@ -60,3 +60,25 @@ on the local Ollama route, where the only cost is your machine's time.
 صارم ومش بلا حدود. لما مزود يخلّص حدّه، الروتر بيوقف استخدامه وينقل
 للمزود اللي بعده أو يوقف في طابور لحد ما الحد يتجدد، ومش بيحوّل لمدفوع
 لوحده أبدًا.
+
+## Alpha 2 (2026-11-13): the 50-model pool, with current numbers
+
+The pool now has **50 unique free models**. The numbers below were
+checked against the providers' public pages on 2026-11-13. Free tiers
+change — the provider's console is always the authority, not this page.
+
+| Provider | Free offer (Nov 2026) | Hard limit (as published) |
+|---|---|---|
+| **OpenRouter `:free`** | ~16 `:free` model IDs + `openrouter/free` router | **20 req/min, 50/day, 1,000/day after $10 lifetime purchases** |
+| **Groq free** | gpt-oss-120b/20b, qwen3.8-27b (preview), Whisper, Orpheus TTS, guard models | Main chat models: **30 req/min, 1,000/day, 8,000 tok/min, 200,000 tok/day**. Whisper: 20 req/min, 2,000/day. Orpheus: 10 req/min, 100/day. Limits apply per organization, not per key. (Llama 3.1/3.3 were removed from Groq free in Aug 2026.) |
+| **Gemini free tier** | gemini-2.5-flash, gemini-2.0-flash, gemma-3, gemma-4 (via OpenRouter too) | Per-model quotas in Google AI Studio — check current numbers there |
+| **SambaNova free** | Llama-3.3-70B, DeepSeek-R1-Distill-Llama-70B, Qwen3-32B, Llama-3.1-8B | Free tier, no card — verify the current roster and caps in the SambaNova console |
+| **Ollama (local)** | qwen2.5-coder, llama3.1, mistral, deepseek-r1, llava, gemma3, phi4, … | No meter — the limit is your RAM / GPU / time |
+
+Why 50+ helps even though every cap is real: a limit is **per model
+and per provider**. When OpenRouter's 50/day is spent, Groq's 1,000/day
+is untouched; when one model hits 429, the router moves to the next
+entry in rank order. The pool does not remove any cap — it spreads the
+work across many of them, so the work keeps going instead of stopping.
+Calling the pool "without limits" is a figure of speech: the pool is
+large, the caps are real. Local Ollama is the only option with no per-request meter.
