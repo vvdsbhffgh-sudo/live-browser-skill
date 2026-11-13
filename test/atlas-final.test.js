@@ -10,10 +10,10 @@ import { artemisStatus } from "../server/artemis.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("package is Atlas, Alpha 1.0.1", () => {
+test("package is Atlas, Alpha 2", () => {
   const pkg = JSON.parse(readFileSync(path.join(ROOT, "package.json"), "utf8"));
   assert.equal(pkg.name, "atlas");
-  assert.equal(pkg.version, "1.0.1-alpha");
+  assert.equal(pkg.version, "1.0.2-alpha");
   // Repo URL stays the technical name until publishing (see NAME.md).
   assert.match(pkg.repository.url, /live-browser-skill/);
 });
@@ -21,7 +21,7 @@ test("package is Atlas, Alpha 1.0.1", () => {
 test("NAME.md records Atlas as decided", () => {
   const doc = readFileSync(path.join(ROOT, "NAME.md"), "utf8");
   assert.match(doc, /Atlas.*decided/i);
-  assert.match(doc, /Alpha 1\.0\.1/);
+  assert.match(doc, /Alpha 2/);
 });
 
 test("modes: all 10 modes load, with language modes", () => {
