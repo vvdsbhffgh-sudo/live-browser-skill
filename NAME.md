@@ -1,6 +1,6 @@
 # NAME.md — the tool's name: **Atlas** (decided 2026-11-13)
 
-The user picked **Atlas**. Version **Alpha 1.0.1**.
+The user picked **Atlas**. Version **Alpha 2 (1.0.2-alpha)**.
 
 - Product name: **Atlas**
 - Package name: `atlas` (`package.json`)
