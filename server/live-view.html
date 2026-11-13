@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas — Live View</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; background: #0f1115; color: #e8e8e8; }
+  header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #171a21; border-bottom: 1px solid #2a2f3a; flex-wrap: wrap; }
+  .badge { background: #e5484d; color: #fff; font-weight: 800; padding: 4px 10px; border-radius: 999px; letter-spacing: 1px; }
+  .badge::before { content: "● "; }
+  h1 { font-size: 18px; margin: 0; }
+  #url { color: #9ecbff; word-break: break-all; }
+  main { padding: 16px; display: grid; gap: 16px; }
+  img#shot { width: 100%; max-width: 1280px; border: 1px solid #2a2f3a; border-radius: 8px; background: #000; }
+  section { background: #171a21; border: 1px solid #2a2f3a; border-radius: 8px; padding: 12px 16px; }
+  pre { white-space: pre-wrap; word-break: break-word; font-size: 13px; max-height: 320px; overflow: auto; }
+  button { font: inherit; font-weight: 700; padding: 6px 14px; border-radius: 999px; border: 1px solid #3a4152; background: #22262f; color: #e8e8e8; cursor: pointer; }
+  button:hover { background: #2c313d; }
+  button[aria-pressed="true"] { background: #e5484d; border-color: #e5484d; color: #fff; }
+  #controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  #ctl-state { font-size: 13px; }
+  a { color: #9ecbff; }
+</style>
+</head>
+<body>
+<header>
+  <span class="badge">LIVE</span>
+  <h1>Atlas — what the AI is doing, as it happens</h1>
+  <span id="url" class="muted">(browser not started yet)</span>
+  <span id="controls">
+    <button id="btn-pause" type="button" title="Stop the agent from acting so you can take over">⏸ Pause</button>
+    <button id="btn-resume" type="button" title="Let the agent act again">▶ Resume</button>
+    <button id="btn-record" type="button" aria-pressed="true" title="Recording saves the action log + screenshots to live/ on this machine only. Click to stop.">● Record</button>
+    <span id="ctl-state" class="muted">recording: on</span>
+  </span>
+</header>
+<main>
+  <div><img id="shot" alt="Latest browser screenshot — updates automatically"></div>
+  <section>
+    <h2>Live action log</h2>
+    <p class="muted" id="steps">(steps: 0)</p>
+    <pre id="log">(waiting for actions…)</pre>
+  </section>
+  <section>
+    <h2>Console &amp; network errors</h2>
+    <pre id="errors">(no errors recorded)</pre>
+  </section>
+  <section>
+    <h2>How this works</h2>
+    <p>The AI drives a real Chromium browser through the Atlas MCP server. Every action it takes appears above, and the screenshot refreshes after each step.</p>
+    <p><strong>Google sign-in is manual, once, by you</strong> — with a dedicated Google account, never your main personal account. Never paste a password in chat or give it to the AI.</p>
+    <p><strong>This skill never pays.</strong> Checkout and payment pages are blocked, and card numbers are never typed.</p>
+    <p><strong>Pause</strong> stops the agent so you can take over the browser yourself; <strong>Resume</strong> lets it continue. <strong>Record</strong> starts/stops saving the session (action log + screenshots) to <code>live/</code> on this machine only — recording starts and stops only when you click it.</p>
+    <p class="muted">Endpoints: <a href="/status">/status</a> · <a href="/latest.png">/latest.png</a> · <a href="/events">/events</a> (SSE) · MCP: <code>/mcp</code></p>
+  </section>
+  <section dir="rtl" lang="ar">
+    <h2>باختصار بالعربي</h2>
+    <p>دي صفحة بث مباشر للي الذكاء الاصطناعي بيعمله في المتصفح: كل خطوة بتظهر فوق، والصورة بتتحدّث بعد كل خطوة.</p>
+    <p>تسجيل الدخول بجوجل بيتم <strong>يدويًا مرة واحدة منك أنت</strong>، وبحساب جوجل مخصّص للذكاء الاصطناعي — مش حسابك الشخصي — وممنوع تبعت كلمة السر في الشات أو للذكاء الاصطناعي.</p>
+    <p><strong>الأداة دي مش بتدفع أبدًا:</strong> صفحات الدفع محظورة، وأرقام البطاقات مش بتتكتب.</p>
+  </section>
+</main>
+<script>
+  const shot = document.getElementById('shot');
+  const logEl = document.getElementById('log');
+  const errEl = document.getElementById('errors');
+  const stepsEl = document.getElementById('steps');
+  const urlEl = document.getElementById('url');
+  const entries = [];
+  const errors = [];
+  function renderLog() {
+    logEl.textContent = entries.slice(-30).map(e =>
+      `${e.time}  ${e.tool}  ${JSON.stringify(e.args || {})}  →  ${e.result || ''}`
+    ).join('\n') || '(waiting for actions…)';
+  }
+  function renderErrors() {
+    errEl.textContent = errors.slice(-20).map(e =>
+      `${e.time}  [${e.kind}]  ${e.message}  ${e.url || ''}`
+    ).join('\n') || '(no errors recorded)';
+  }
+  function refreshShot() { shot.src = '/latest.png?t=' + Date.now(); }
+  async function refreshStatus() {
+    try {
+      const r = await fetch('/status');
+      const s = await r.json();
+      urlEl.textContent = s.url ? `${s.title ? s.title + ' — ' : ''}${s.url}` : '(browser not started yet)';
+      stepsEl.textContent = `(steps: ${s.steps}/${s.maxSteps}${s.mode ? ` · mode: ${s.mode}` : ''}${s.readonly ? ' · READ-ONLY' : ''}${s.paused ? ' · PAUSED' : ''}${s.tabs ? ` · ${s.tabs} tab(s)` : ''})`;
+      setCtl(s);
+      if (Array.isArray(s.errors)) { errors.length = 0; errors.push(...s.errors); renderErrors(); }
+    } catch {}
+  }
+  let recordingOn = true;
+  function setCtl(s) {
+    if (!s) return;
+    if (typeof s.paused === 'boolean') {
+      document.getElementById('btn-pause').setAttribute('aria-pressed', String(s.paused));
+      document.getElementById('btn-resume').setAttribute('aria-pressed', String(!s.paused));
+    }
+    if (typeof s.recording === 'boolean') {
+      recordingOn = s.recording;
+      document.getElementById('btn-record').setAttribute('aria-pressed', String(s.recording));
+    }
+    document.getElementById('ctl-state').textContent = `recording: ${recordingOn ? 'on' : 'off'}`;
+  }
+  async function postCtl(path, body) {
+    try {
+      const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : '{}' });
+      setCtl(await r.json());
+    } catch {}
+  }
+  document.getElementById('btn-pause').onclick = () => postCtl('/api/pause');
+  document.getElementById('btn-resume').onclick = () => postCtl('/api/resume');
+  document.getElementById('btn-record').onclick = () => postCtl('/api/record', { recording: !recordingOn });
+  const es = new EventSource('/events');
+  es.onmessage = (ev) => {
+    try {
+      const d = JSON.parse(ev.data);
+      if (d.type === 'hello' && Array.isArray(d.actions)) { entries.push(...d.actions); renderLog(); }
+      if (d.type === 'hello' && Array.isArray(d.errors)) { errors.push(...d.errors); renderErrors(); }
+      if (d.type === 'action') { entries.push(d); renderLog(); refreshStatus(); }
+      if (d.type === 'error') { errors.push(d); renderErrors(); }
+      if (d.type === 'screenshot') refreshShot();
+      if (d.type === 'paused' || d.type === 'resumed' || d.type === 'recording' || d.type === 'mode') refreshStatus();
+    } catch {}
+  };
+  refreshShot(); refreshStatus();
+  setInterval(refreshShot, 5000);
+  setInterval(refreshStatus, 5000);
+</script>
+</body>
+</html>
