@@ -67,6 +67,7 @@ npm install
 npx playwright install chromium
 npm start            # stdio MCP server (Claude Code / Cursor)
 npm run start:http   # HTTP server + Live View on http://localhost:3100
+# Or after `npm link`: `atlas --http` (see docs/INSTALL.md for every connection method).
 ```
 
 Config via environment variables (see `.env.example`):
