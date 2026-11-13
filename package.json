@@ -1,0 +1,39 @@
+{
+  "author": "vvdsbhffgh-sudo",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.0",
+    "playwright": "^1.49.0",
+    "zod": "^3.23.8"
+  },
+  "description": "Free, open-source MCP server + Agent Skill that gives an AI builder a real browser it can drive, with its own dedicated Google login and a live view \u2014 and no payment ability ever.",
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "playwright",
+    "browser",
+    "agent-skill",
+    "lovable",
+    "replit",
+    "claude-code",
+    "cursor"
+  ],
+  "license": "MIT",
+  "name": "atlas",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vvdsbhffgh-sudo/live-browser-skill"
+  },
+  "scripts": {
+    "install-browser": "npx playwright install chromium",
+    "list-tools": "node scripts/list-tools.js",
+    "update-deps": "bash scripts/update-deps.sh",
+    "start": "node server/index.js",
+    "start:http": "node server/index.js --http",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "type": "module",
+  "version": "1.0.1-alpha"
+}
